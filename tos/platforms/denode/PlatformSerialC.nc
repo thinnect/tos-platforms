@@ -44,7 +44,7 @@ configuration PlatformSerialC
 
 implementation
 {
-  components Atm128Uart1C as UartC;//1
+  components Atm128Uart0C as UartC;//0
   StdControl = UartC;
   UartStream = UartC;
   UartByte = UartC;
