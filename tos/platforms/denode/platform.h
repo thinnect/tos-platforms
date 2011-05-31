@@ -4,6 +4,10 @@
 /* Pin Change Interrupt Vectors */
 #define SIG_PIN_CHANGE0  _VECTOR(9)
 
+/* USART Vectors */
+#define SIG_USART0_DATA  _VECTOR(26)
+#define SIG_USART1_DATA  _VECTOR(37)
+
 /* Disable watchdog or enable with 8 second timeout if WDTON fuse is programmed. */
 /* (Disabling would result in a 16ms watchdog if WDTON is programmed and user
  * applications might not initialize fast enough) */
