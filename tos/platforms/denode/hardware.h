@@ -42,6 +42,11 @@
 #include <atm128hardware.h>
 #include <Atm128Adc.h>
 
+// Andres 07.06.11: actually PLATFORM_MHZ is not having effect right now.
+// tos/chips/atm128rfa1/timer/TimerConfig.h overwrites this define to 16 MHz.
+// tos/chips/atm128rfa1/timer/McuinitP.nc is used, however this TimerConfig.h overrides PLATFORM_MHZ.
+// For now McuinitP uses internal RC oscillator prescaler - they are different with the tranceiver clock
+// So this platform is hardcoded to 16 MHz.
 #ifndef PLATFORM_MHZ
 #define PLATFORM_MHZ 16
 #endif
