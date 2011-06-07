@@ -6,12 +6,12 @@
  * documentation for any purpose, without fee, and without written agreement is
  * hereby granted, provided that the above copyright notice, the following
  * two paragraphs and the author appear in all copies of this software.
- * 
+ *
  * IN NO EVENT SHALL THE VANDERBILT UNIVERSITY BE LIABLE TO ANY PARTY FOR
  * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
  * OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE VANDERBILT
  * UNIVERSITY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE VANDERBILT UNIVERSITY SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
  * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
@@ -42,6 +42,7 @@ configuration ActiveMessageC
 #ifdef PACKET_LINK
 		interface PacketLink;
 #endif
+		interface RadioChannel;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
@@ -67,6 +68,7 @@ implementation
 #ifdef PACKET_LINK
 	PacketLink = MessageC;
 #endif
+	RadioChannel = MessageC;
 
 	PacketTimeStampRadio = MessageC;
 	PacketTimeStampMilli = MessageC;
