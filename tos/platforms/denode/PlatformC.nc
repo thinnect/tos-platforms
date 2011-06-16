@@ -60,4 +60,7 @@ implementation
     SubInit = PlatformP.SubInit;
 
     PlatformP.RadioInit -> RFA1RadioOffP.RFA1RadioOff;
+
+    components RFAPowerOverrideC;
+
 }
