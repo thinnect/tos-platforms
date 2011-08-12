@@ -189,8 +189,19 @@ implementation
     CCA_THRES =  RFA1_CCA_THRES_VALUE;
     PHY_CC_CCA = (RFA1_CCA_MODE_VALUE<<CCA_MODE0) | channel;
     
-    // set PA lead time, for example "PA_BUF_LT_6US and PA_LT_2US" 
+#ifdef ENABLE_PA
+    #warning EXTERNAL PA/LNA SWITCH FUNCTIONALITY ENABLED
+    // make lead time longer if real PA is used
+    PHY_TX_PWR = (RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK) | (PA_BUF_LT_6US<<PA_BUF_LT0) | (PA_LT_8US<<PA_LT0);
+    
+    // enable front-end - pins DIG3 and DIG4 are used for switching LNA and PA    
+    // Tx mode  Rx mode
+    // DIG3 1   DIG3 0
+    // DIG4 0   DIG4 1
+    SET_BIT(TRX_CTRL_1, PA_EXT_EN);
+#else
     PHY_TX_PWR = (RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK) | (PA_BUF_LT_6US<<PA_BUF_LT0) | (PA_LT_2US<<PA_LT0);
+#endif
 
 
 #ifdef RFA1_TIMESTAMP_RTC
@@ -201,15 +212,6 @@ implementation
 #ifdef RFA1_TIMESTAMP_MCU
     // enable Timer1 capture for SFD
     SET_BIT(TRX_CTRL_1, IRQ_2_EXT_EN);
-#endif
-
-#ifdef ENABLE_PA
-    #warning PA enabled
-    // enable front-end - pins DIG3 and DIG4 are used for switching LNA and PA
-    // Tx mode  Rx mode
-    // DIG3 1   DIG3 0
-    // DIG4 0   DIG4 1
-    SET_BIT(TRX_CTRL_1, PA_EXT_EN);
 #endif
 
     // enter sleep mode
@@ -355,7 +357,11 @@ implementation
     if( length != txPower )
     {
       txPower = length;
+#ifdef ENABLE_PA
+      PHY_TX_PWR = (txPower & RFA1_TX_PWR_MASK) | (PA_BUF_LT_6US<<PA_BUF_LT0) | (PA_LT_8US<<PA_LT0);
+#else
       PHY_TX_PWR = (txPower & RFA1_TX_PWR_MASK) | (PA_BUF_LT_6US<<PA_BUF_LT0) | (PA_LT_2US<<PA_LT0);
+#endif
     }
 
     if( call Config.requiresRssiCca(msg) 
