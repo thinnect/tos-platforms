@@ -189,19 +189,7 @@ implementation
     CCA_THRES =  RFA1_CCA_THRES_VALUE;
     PHY_CC_CCA = (RFA1_CCA_MODE_VALUE<<CCA_MODE0) | channel;
     
-#ifdef ENABLE_PA
-    #warning EXTERNAL PA/LNA SWITCH FUNCTIONALITY ENABLED
-    // make lead time longer if real PA is used
-    PHY_TX_PWR = (RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK) | (PA_BUF_LT_6US<<PA_BUF_LT0) | (PA_LT_8US<<PA_LT0);
-    
-    // enable front-end - pins DIG3 and DIG4 are used for switching LNA and PA    
-    // Tx mode  Rx mode
-    // DIG3 1   DIG3 0
-    // DIG4 0   DIG4 1
-    SET_BIT(TRX_CTRL_1, PA_EXT_EN);
-#else
     PHY_TX_PWR = (RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK) | (PA_BUF_LT_6US<<PA_BUF_LT0) | (PA_LT_2US<<PA_LT0);
-#endif
 
 
 #ifdef RFA1_TIMESTAMP_RTC
@@ -590,6 +578,20 @@ implementation
           state = STATE_RX_ON;
           // enable frame buffer protection
           SET_BIT(TRX_CTRL_2, RX_SAFE_MODE);
+
+#ifdef ENABLE_PA
+        #warning EXTERNAL PA/LNA SWITCH FUNCTIONALITY ENABLED
+        // it cannot be called in software init, because for some reason if also some serial components are
+        // compiled in then at startup radio is turned off and then software init is called which is nonsense
+        // make lead time longer if real PA is used
+        PHY_TX_PWR = (RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK) | (PA_BUF_LT_6US<<PA_BUF_LT0) | (PA_LT_8US<<PA_LT0);
+    
+        // enable front-end - pins DIG3 and DIG4 are used for switching LNA and PA    
+        // Tx mode  Rx mode
+        // DIG3 1   DIG3 0
+        // DIG4 0   DIG4 1
+        SET_BIT(TRX_CTRL_1, PA_EXT_EN);
+#endif
           cmd = CMD_SIGNAL_DONE;
         }
         else if( cmd == CMD_TRANSMIT )
