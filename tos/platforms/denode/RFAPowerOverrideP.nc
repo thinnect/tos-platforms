@@ -3,7 +3,7 @@ module RFAPowerOverrideP {
 }
 implementation {
 
-	#warning "RFA1 sleep state fix"
+	#warning "Is RFA1 sleep state fix neccesary with tinyos-main version?"
 
 	/**
 	 * Check RFA1 radio state, 0 is off and 0x1F is sleep.
