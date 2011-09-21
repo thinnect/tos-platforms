@@ -43,7 +43,6 @@ module PlatformP @safe()
     interface Init as McuInit;
     interface Init as LedsInit;
     interface Init as SubInit;
-    interface Init as RadioInit;
   }
 }
 
@@ -69,7 +68,6 @@ implementation
     ok = ecombine(ok, call LedsInit.init());
     ok = ecombine(ok, powerInit());
     ok = ecombine(ok, call SubInit.init());
-    ok = ecombine(ok, call RadioInit.init());
 
     return ok;
   }

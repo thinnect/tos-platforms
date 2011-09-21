@@ -50,7 +50,7 @@ configuration PlatformC
 }
 implementation
 {
-    components PlatformP, McuInitC, MeasureClockC, RFA1RadioOffP;
+    components PlatformP, McuInitC, MeasureClockC;
 
     Init = PlatformP;
     Atm128Calibrate = MeasureClockC;
@@ -58,7 +58,4 @@ implementation
     LedsInit = PlatformP.LedsInit;
     PlatformP.McuInit -> McuInitC;
     SubInit = PlatformP.SubInit;
-
-    PlatformP.RadioInit -> RFA1RadioOffP.RFA1RadioOff;
-
 }
