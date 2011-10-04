@@ -58,4 +58,6 @@ implementation
     LedsInit = PlatformP.LedsInit;
     PlatformP.McuInit -> McuInitC;
     SubInit = PlatformP.SubInit;
+
+    components RFAPowerOverrideC;
 }
