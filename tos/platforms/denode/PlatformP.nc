@@ -68,7 +68,16 @@ implementation
     ok = ecombine(ok, call LedsInit.init());
     ok = ecombine(ok, powerInit());
     ok = ecombine(ok, call SubInit.init());
+    
+    // B1 SPI_SCK must be input and pullup enabled otherwise it draws 1.1 mA
+    DDRB &= ~0x02;  // B1 input
+    PORTB |= 0x02;  // B1 pullup
 
+    // E4 onewire must be input and pullup enabled
+    // otherwise it ramps from 25 uA to ca 50 uA and then falls again back to 25 uA and then starts ramping up
+    DDRE &= ~0x10;  // E4 input
+    PORTE |= 0x10;  // E4 pullup
+            
     return ok;
   }
 
