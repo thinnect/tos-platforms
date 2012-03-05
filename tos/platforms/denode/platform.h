@@ -1,12 +1,20 @@
 // disable watchdog timer at startup (see AVR132: Using the Enhanced Watchdog Timer)
 #include <avr/wdt.h>
+#include "TinyError.h"
 
-// defines needed for CC1101 radio driver
+// defines and asserts needed for CC1101 radio driver
+#define ASSERT_CANT_HAPPEN 0xBEEF
 #define ASSERT_NONE
-#define assert(condition, output)
-#define assertNot(condition, output)
-#define assertSuccess(error, output)
-#define assertEquals(a, b, output)
+
+inline void doAssert2(bool condition, uint16_t errorCode) __attribute__((C)) {}
+inline void doAssertNot2(bool condition, uint16_t errorCode) __attribute__((C)) {}
+inline void doAssertSuccess2(error_t error, uint16_t errorCode) __attribute__((C)) {}
+inline void doAssertEquals2(uint32_t a, uint32_t b, uint16_t errorCode) __attribute__((C)) {}
+
+#define assert(condition, output) doAssert2((condition), (output))
+#define assertNot(condition, output) doAssertNot2((condition), (output))
+#define assertSuccess(error, output) doAssertSuccess2((error), (output))
+#define assertEquals(a, b, output) doAssertEquals2((a), (b), (output))
 
 /* Disable watchdog or enable with 8 second timeout if WDTON fuse is programmed. */
 /* (Disabling would result in a 16ms watchdog if WDTON is programmed and user
