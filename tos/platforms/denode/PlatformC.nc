@@ -59,5 +59,9 @@ implementation
     PlatformP.McuInit -> McuInitC;
     SubInit = PlatformP.SubInit;
 
+    // Flash CS
+    components HplAtm128GeneralIOC as Pins;
+    PlatformP.FlashCS -> Pins.PortB0;
+
     components RFAPowerOverrideC;
 }

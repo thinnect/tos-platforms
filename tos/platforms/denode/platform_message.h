@@ -24,19 +24,23 @@
 #define PLATFORM_MESSAGE_H
 
 #include <RFA1Radio.h>
+#include "ChipconPacket.h"
 #include <Serial.h>
 
 typedef union message_header {
 	rfa1packet_header_t rfa1;
+	chipcon_header_t cc1101;
 	serial_header_t serial;
 } message_header_t;
 
 typedef union message_footer {
 	rfa1packet_footer_t rfa1;
+	chipcon_footer_t cc1101;
 } message_footer_t;
 
 typedef union message_metadata {
 	rfa1packet_metadata_t rfa1;
+	chipcon_metadata_t cc1101;
 } message_metadata_t;
 
 #endif

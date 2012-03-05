@@ -40,6 +40,7 @@ module PlatformP @safe()
 
   uses
   {
+    interface GeneralIO as FlashCS;
     interface Init as McuInit;
     interface Init as LedsInit;
     interface Init as SubInit;
@@ -81,7 +82,10 @@ implementation
     ok = ecombine(ok, call LedsInit.init());
     ok = ecombine(ok, powerInit());
     ok = ecombine(ok, call SubInit.init());
-            
+    
+    call FlashCS.makeOutput();
+    call FlashCS.set(); // deselect flash
+
     return ok;
   }
 
