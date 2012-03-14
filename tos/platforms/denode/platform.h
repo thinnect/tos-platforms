@@ -11,10 +11,10 @@ inline void doAssertNot2(bool condition, uint16_t errorCode) __attribute__((C)) 
 inline void doAssertSuccess2(error_t error, uint16_t errorCode) __attribute__((C)) {}
 inline void doAssertEquals2(uint32_t a, uint32_t b, uint16_t errorCode) __attribute__((C)) {}
 
-#define assert(condition, output) doAssert2((condition), (output))
-#define assertNot(condition, output) doAssertNot2((condition), (output))
-#define assertSuccess(error, output) doAssertSuccess2((error), (output))
-#define assertEquals(a, b, output) doAssertEquals2((a), (b), (output))
+#define ccassert(condition, output) doAssert2((condition), (output))
+#define ccassertNot(condition, output) doAssertNot2((condition), (output))
+#define ccassertSuccess(error, output) doAssertSuccess2((error), (output))
+#define ccassertEquals(a, b, output) doAssertEquals2((a), (b), (output))
 
 /* Disable watchdog or enable with 8 second timeout if WDTON fuse is programmed. */
 /* (Disabling would result in a 16ms watchdog if WDTON is programmed and user
