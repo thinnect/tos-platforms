@@ -57,6 +57,7 @@ configuration HplAt45dbIOC {
   }
 }
 implementation {
+#warning Using denode Flash resource files
   // Wire up byte I/O to At45db
   components HplAt45dbIOP, HplAtm128GeneralIOC as Pins, PlatformC;
 //  components BusyWaitMicroC;
