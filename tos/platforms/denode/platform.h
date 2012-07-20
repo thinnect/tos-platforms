@@ -1,4 +1,7 @@
 // disable watchdog timer at startup (see AVR132: Using the Enhanced Watchdog Timer)
+#ifndef PLATFORM_H 
+#define PLATFORM_H
+
 #include <avr/wdt.h>
 #include "TinyError.h"
 
@@ -27,3 +30,4 @@ inline void doAssertEquals2(uint32_t a, uint32_t b, uint16_t errorCode) __attrib
     WDTCSR |= (1<<WDCE) | (1<<WDE); \
     WDTCSR = (1<<WDP3) | (1<<WDP0); \
 }
+#endif
