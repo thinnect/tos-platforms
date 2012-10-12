@@ -32,10 +32,10 @@
 *
 * Author: Miklos Maroti
 * Author:Andras Biro
-* 
+*
 * Bug fix for radio turn off
 * Author: Madis Uusjarv
-* 
+*
 */
 
 #include <RFA1DriverLayer.h>
@@ -92,7 +92,7 @@ module RFA1DriverLayerP
 implementation
 {
 	#warning RADIO TURN OFF BUG FIX!
-	
+
   rfa1_header_t* getHeader(message_t* msg)
   {
     return ((void*)msg) + call Config.headerLength(msg);
@@ -155,6 +155,8 @@ implementation
   };
 
   norace uint8_t radioIrq;
+  // count of RX_START interrupts that have not been handled in the downloadMessage() function
+  uint8_t m_unhandled_rx_start_count = 0;
 
   tasklet_norace uint8_t txPower;
   tasklet_norace uint8_t channel;
@@ -338,7 +340,7 @@ implementation
       return EALREADY;
 
 	atomic
-	{    
+	{
 	    cmd = CMD_TURNON;
 	    radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
 	}
@@ -489,6 +491,7 @@ implementation
     if( (PHY_RSSI & (1<<RX_CRC_VALID)) && length >= 3 && length <= call RadioPacket.maxPayloadLength() + 2 )
     {
       uint8_t* data;
+      uint8_t rx_count_ok = FALSE;
 
       data = getPayload(rxMsg);
       getHeader(rxMsg)->length = length;
@@ -499,11 +502,22 @@ implementation
       // memory is fast, no point optimizing header check
       memcpy(data,(void*)&TRXFBST,length);
 
-      if( signal RadioReceive.header(rxMsg) )
+      atomic
       {
-        call PacketLinkQuality.set(rxMsg, (uint8_t)*(&TRXFBST+TST_RX_LENGTH));
-        sendSignal = TRUE;
+        if (m_unhandled_rx_start_count == 1)
+          rx_count_ok = TRUE;
+        m_unhandled_rx_start_count = 0;
       }
+
+      if (rx_count_ok)
+      {
+        if( signal RadioReceive.header(rxMsg) )
+        {
+          call PacketLinkQuality.set(rxMsg, (uint8_t)*(&TRXFBST+TST_RX_LENGTH));
+          sendSignal = TRUE;
+        }
+      }
+      m_unhandled_rx_start_count = 0;
     }
 
     state = STATE_RX_ON;
@@ -695,6 +709,7 @@ implementation
    */
   AVR_NONATOMIC_HANDLER(TRX24_RX_START_vect){
     RADIO_ASSERT( ! radioIrq );
+    atomic m_unhandled_rx_start_count++;
 	if (cmd != CMD_TURNOFF)
 	{
 	    atomic radioIrq |= IRQ_RX_START;
