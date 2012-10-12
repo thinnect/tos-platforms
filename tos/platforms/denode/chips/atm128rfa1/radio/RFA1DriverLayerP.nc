@@ -625,6 +625,11 @@ implementation
 
           call PacketTimeStamp.set(rxMsg, time);
 
+// defendec: for ultrasniffy, use a modified message_t and insert radio channel info for every received packet.
+#ifdef USE_ULTRASNIFFY_MOD
+          ((sniffy_header_t*)rxMsg)->radio_channel = channel;
+#endif
+
 #ifndef RFA1_RSSI_ENERGY
           call PacketRSSI.set(rxMsg, temp);
 #endif
