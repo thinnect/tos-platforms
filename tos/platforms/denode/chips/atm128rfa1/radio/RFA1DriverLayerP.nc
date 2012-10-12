@@ -91,7 +91,8 @@ module RFA1DriverLayerP
 
 implementation
 {
-	#warning RADIO TURN OFF BUG FIX!
+  #warning RADIO TURN OFF BUG FIX!
+  #warning RX OVERWRITE BUG FIX!
 
   rfa1_header_t* getHeader(message_t* msg)
   {
@@ -156,7 +157,7 @@ implementation
 
   norace uint8_t radioIrq;
   // count of RX_START interrupts that have not been handled in the downloadMessage() function
-  uint8_t m_unhandled_rx_start_count = 0;
+  norace uint8_t m_unhandled_rx_start_count = 0;
 
   tasklet_norace uint8_t txPower;
   tasklet_norace uint8_t channel;
