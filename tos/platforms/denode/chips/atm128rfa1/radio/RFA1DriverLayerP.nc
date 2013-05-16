@@ -486,6 +486,7 @@ implementation
   {
     uint8_t length;
     bool sendSignal = FALSE;
+    uint8_t packet_link_quality;
 
     length = TST_RX_LENGTH;
 
@@ -502,6 +503,7 @@ implementation
 
       // memory is fast, no point optimizing header check
       memcpy(data,(void*)&TRXFBST,length);
+      packet_link_quality = (uint8_t)*(&TRXFBST+TST_RX_LENGTH);
 
       atomic
       {
@@ -514,11 +516,10 @@ implementation
       {
         if( signal RadioReceive.header(rxMsg) )
         {
-          call PacketLinkQuality.set(rxMsg, (uint8_t)*(&TRXFBST+TST_RX_LENGTH));
+          call PacketLinkQuality.set(rxMsg, packet_link_quality);
           sendSignal = TRUE;
         }
       }
-      m_unhandled_rx_start_count = 0;
     }
 
     state = STATE_RX_ON;
