@@ -36,6 +36,9 @@
 * Bug fix for radio turn off
 * Author: Madis Uusjarv
 *
+* 2013-09-05
+* Bug fix for rx packet overwrite. add RX_SAFE_MODE.
+* Author: Elmo Trolla
 */
 
 #include <RFA1DriverLayer.h>
@@ -91,8 +94,13 @@ module RFA1DriverLayerP
 
 implementation
 {
+	#define __MODUUL__ "RFA1"
+	#define __LOG_LEVEL__ ( LOG_LEVEL_RFA1 & BASE_LOG_LEVEL )
+	#include "log.h"
+
   #warning RADIO TURN OFF BUG FIX!
   #warning RX OVERWRITE BUG FIX!
+  #warning EXPERIMENTAL SEND/RECEIVE MSG OVERWRITE FIX!
 
   rfa1_header_t* getHeader(message_t* msg)
   {
@@ -156,8 +164,6 @@ implementation
   };
 
   norace uint8_t radioIrq;
-  // count of RX_START interrupts that have not been handled in the downloadMessage() function
-  norace uint8_t m_unhandled_rx_start_count = 0;
 
   tasklet_norace uint8_t txPower;
   tasklet_norace uint8_t channel;
@@ -167,6 +173,10 @@ implementation
 
   tasklet_norace uint8_t rssiClear;
   tasklet_norace uint8_t rssiBusy;
+
+  uint32_t m_rx_packet_timestamp;
+  uint8_t  m_rx_packet_channel;
+  bool  m_rx_allowed = TRUE;
 
   /*----------------- INIT -----------------*/
 
@@ -196,6 +206,7 @@ implementation
     txPower = RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK;
     channel = RFA1_DEF_CHANNEL & RFA1_CHANNEL_MASK;
     TRX_CTRL_1 |= 1<<TX_AUTO_CRC_ON;
+    TRX_CTRL_2 |= 1<<RX_SAFE_MODE;
     PHY_CC_CCA = RFA1_CCA_MODE_VALUE | channel;
 
     SET_BIT(TRXPR,SLPTR);
@@ -237,6 +248,7 @@ implementation
 
 
     PHY_CC_CCA=RFA1_CCA_MODE_VALUE|channel;
+    m_rx_packet_channel = channel;
 
     if( state == STATE_RX_ON )
       state = STATE_TRX_OFF_2_RX_ON;
@@ -481,70 +493,61 @@ implementation
 
   /*----------------- RECEIVE -----------------*/
 
-  //TODO: RX_SAFE_MODE with define
   inline void downloadMessage()
   {
-    uint8_t length;
-    bool sendSignal = FALSE;
-    uint8_t packet_link_quality;
+        bool sendSignal = FALSE;
 
-    length = TST_RX_LENGTH;
+        atomic m_rx_allowed = FALSE;
 
-    if( (PHY_RSSI & (1<<RX_CRC_VALID)) && length >= 3 && length <= call RadioPacket.maxPayloadLength() + 2 )
-    {
-      uint8_t* data;
-      uint8_t rx_count_ok = FALSE;
-
-      data = getPayload(rxMsg);
-      getHeader(rxMsg)->length = length;
-
-      // we do not store the CRC field
-      length -= 2;
-
-      // memory is fast, no point optimizing header check
-      memcpy(data,(void*)&TRXFBST,length);
-      packet_link_quality = (uint8_t)*(&TRXFBST+TST_RX_LENGTH);
-
-      atomic
-      {
-        if (m_unhandled_rx_start_count == 1)
-          rx_count_ok = TRUE;
-        m_unhandled_rx_start_count = 0;
-      }
-
-      if (rx_count_ok)
-      {
-        if( signal RadioReceive.header(rxMsg) )
-        {
-          call PacketLinkQuality.set(rxMsg, packet_link_quality);
-          sendSignal = TRUE;
+        if (signal RadioReceive.header(rxMsg)) {
+            sendSignal = TRUE;
         }
-      }
-    }
 
-    state = STATE_RX_ON;
+        state = STATE_RX_ON;
 
-#ifdef RADIO_DEBUG_MESSAGES
-    if( call DiagMsg.record() )
-    {
-      length = getHeader(rxMsg)->length;
+        #ifdef RADIO_DEBUG_MESSAGES
+            if( call DiagMsg.record() )
+            {
+              length = getHeader(rxMsg)->length;
+        
+              call DiagMsg.chr('r');
+              call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+              call DiagMsg.uint16(call LocalTime.get());
+              call DiagMsg.int8(sendSignal ? length : -length);
+              call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
+              call DiagMsg.int8(call PacketRSSI.isSet(rxMsg) ? call PacketRSSI.get(rxMsg) : -1);
+              call DiagMsg.uint8(call PacketLinkQuality.isSet(rxMsg) ? call PacketLinkQuality.get(rxMsg) : 0);
+              call DiagMsg.send();
+            }
+        #endif
 
-      call DiagMsg.chr('r');
-      call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
-      call DiagMsg.uint16(call LocalTime.get());
-      call DiagMsg.int8(sendSignal ? length : -length);
-      call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
-      call DiagMsg.int8(call PacketRSSI.isSet(rxMsg) ? call PacketRSSI.get(rxMsg) : -1);
-      call DiagMsg.uint8(call PacketLinkQuality.isSet(rxMsg) ? call PacketLinkQuality.get(rxMsg) : 0);
-      call DiagMsg.send();
-    }
-#endif
+        cmd = CMD_NONE;
+/*
+        {
+            // debugging. print out the whole packet if the source address is not one of the allowed addresses.
 
-    cmd = CMD_NONE;
+            uint8_t length = getHeader(rxMsg)->length;
+            uint8_t* data = getPayload(rxMsg);
 
-    // signal only if it has passed the CRC check
-    if( sendSignal )
-      rxMsg = signal RadioReceive.receive(rxMsg);
+            if (length > 10) {
+                uint16_t source = *((uint16_t*)getHeader(rxMsg)+4);
+                if (source != 0x93ec && source != 0xc6b7 && source != 0xdfca && source != 0xe70e && source != 0xf3bd && source != 0x8888)
+                {
+                    uint8_t i;
+                    printf("RF %04X %u\n", source, length);
+                    for (i = 0; i < length; i++) {
+                        printf("%02X", data[i]);
+                    }
+                    printf("\n");
+                }
+            }
+        }
+*/
+        if (sendSignal) {
+            rxMsg = signal RadioReceive.receive(rxMsg);
+        }
+
+        atomic m_rx_allowed = TRUE;
   }
 
   default tasklet_async event bool RadioReceive.header(message_t* msg)
@@ -571,14 +574,6 @@ implementation
       irq = radioIrq;
       radioIrq = IRQ_NONE;
     }
-
-#ifdef RFA1_RSSI_ENERGY
-    // check this early before the PHY_ED_LEVEL register is overwritten
-    if( irq == IRQ_RX_END )
-      call PacketRSSI.set(rxMsg, PHY_ED_LEVEL);
-    else
-      call PacketRSSI.clear(rxMsg);
-#endif
 
     if( (irq & IRQ_PLL_LOCK) != 0 )
     {
@@ -624,22 +619,12 @@ implementation
         {
           temp = PHY_RSSI & RFA1_RSSI_MASK;
           rssiBusy += temp - (rssiBusy >> 2);
-
-          call PacketTimeStamp.set(rxMsg, time);
-
-// defendec: for ultrasniffy, use a modified message_t and insert radio channel info for every received packet.
-#ifdef USE_ULTRASNIFFY_MOD
-          ((sniffy_header_t*)rxMsg)->radio_channel = channel;
-#endif
-
 #ifndef RFA1_RSSI_ENERGY
           call PacketRSSI.set(rxMsg, temp);
 #endif
         }
         else
         {
-          call PacketTimeStamp.clear(rxMsg);
-
 #ifndef RFA1_RSSI_ENERGY
           call PacketRSSI.clear(rxMsg);
 #endif
@@ -698,17 +683,55 @@ implementation
 	}
   }
 
-  /**
-   * Indicates the completion of a frame reception
-   */
-  AVR_NONATOMIC_HANDLER(TRX24_RX_END_vect){
-    RADIO_ASSERT( ! radioIrq );
-	if (cmd != CMD_TURNOFF)
-	{
-		atomic radioIrq |= IRQ_RX_END;
-		call Tasklet.schedule();
-	}
-  }
+    task void task_tasklet_schedule()
+    {
+        call Tasklet.schedule();
+    }
+
+    /**
+     * Indicates the completion of a frame reception
+     */
+    //AVR_NONATOMIC_HANDLER(TRX24_RX_END_vect)
+    AVR_ATOMIC_HANDLER(TRX24_RX_END_vect)
+    {
+        // download the packet from the radio chip and set timestamp/rssi
+
+        //RADIO_ASSERT( ! radioIrq );
+        if (cmd != CMD_TURNOFF && m_rx_allowed)
+        {
+            uint8_t length;
+
+            length = TST_RX_LENGTH;
+                
+            if ( (PHY_RSSI & (1<<RX_CRC_VALID)) && length >= 3 && length <= call RadioPacket.maxPayloadLength() + 2 )
+            {
+                uint8_t* data;
+                
+                data = getPayload(rxMsg);
+                getHeader(rxMsg)->length = length;
+                
+                // we do not store the CRC field
+                length -= 2;
+                
+                memcpy(data, (void*)&TRXFBST, length);
+                call PacketLinkQuality.set(rxMsg, (uint8_t)*(&TRXFBST + TST_RX_LENGTH));
+                call PacketTimeStamp.set(rxMsg, m_rx_packet_timestamp);
+                // defendec: for ultrasniffy, use a modified message_t and insert radio channel info for every received packet.
+                #ifdef USE_ULTRASNIFFY_MOD
+                    ((sniffy_header_t*)rxMsg)->radio_channel = m_rx_packet_channel;
+                #endif
+                #ifdef RFA1_RSSI_ENERGY
+                     call PacketRSSI.set(rxMsg, PHY_ED_LEVEL);
+                #endif
+                radioIrq |= IRQ_RX_END;
+                post task_tasklet_schedule();
+            }
+        }
+
+        // reset dynamic frame buffer protection
+        TRX_CTRL_2 &= ~(1<<RX_SAFE_MODE);
+        TRX_CTRL_2 |= 1<<RX_SAFE_MODE;
+    }
 
   /**
    * Indicates the start of a PSDU reception. The TRX_STATE changes
@@ -716,10 +739,14 @@ implementation
    */
   AVR_NONATOMIC_HANDLER(TRX24_RX_START_vect){
     RADIO_ASSERT( ! radioIrq );
-    atomic m_unhandled_rx_start_count++;
 	if (cmd != CMD_TURNOFF)
 	{
-	    atomic radioIrq |= IRQ_RX_START;
+	    atomic {
+                radioIrq |= IRQ_RX_START;
+                // TODO: if the dynamic frame buffer protection disables this RX_START interrupt, then we could set the timestamp and packet directly on the rxMsg.
+                m_rx_packet_timestamp = call SfdCapture.get();
+                m_rx_packet_channel = channel;
+            }
 	    call Tasklet.schedule();
 	}
   }
