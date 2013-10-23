@@ -1,9 +1,22 @@
 // disable watchdog timer at startup (see AVR132: Using the Enhanced Watchdog Timer)
-#ifndef PLATFORM_H 
+#ifndef PLATFORM_H
 #define PLATFORM_H
 
 #include <avr/wdt.h>
 #include "TinyError.h"
+
+#define AT45DB_FLASH_CHIP
+#define DS2401_PIN PortE4
+// Battery
+#define BATTERY_REF_VOLTAGE 5400UL
+#define BATTERY_REF_VOLTAGE_TAG ATM128_ADC_VREF_AVDD
+#define BATTERY_ADC_CHANNEL ATM128_ADC_SNGL_ADC0
+#define BATTERY_PIN PortB7
+
+// Security defines
+#define EIGHT_BIT_PROCESSOR
+#define INLINE_ASM
+#define TINYECC_AVR_ASM
 
 // defines and asserts needed for CC1101 radio driver
 #define ASSERT_CANT_HAPPEN 0xBEEF
