@@ -32,7 +32,7 @@ typedef union message_header {
 	rfa1packet_header_t rfa1;
 	chipcon_header_t cc1101;
 	serial_header_t serial;
-	lite_serial_header_r lite_serial;
+	lite_serial_header_t lite_serial;
 } message_header_t;
 
 typedef union message_footer {
