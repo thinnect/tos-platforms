@@ -46,6 +46,9 @@ configuration ActiveMessageC
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+
+		interface PacketField<uint8_t> as PacketLQI;
+		interface PacketField<int8_t> as PacketRSSI;
 	}
 }
 
@@ -72,4 +75,8 @@ implementation
 
 	PacketTimeStampRadio = MessageC;
 	PacketTimeStampMilli = MessageC;
+
+	components RFA1PacketRssiC;
+	PacketLQI = MessageC.PacketLinkQuality;
+	PacketRSSI = RFA1PacketRssiC;
 }
