@@ -509,7 +509,7 @@ implementation
             if( call DiagMsg.record() )
             {
               length = getHeader(rxMsg)->length;
-        
+
               call DiagMsg.chr('r');
               call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
               call DiagMsg.uint16(call LocalTime.get());
@@ -688,6 +688,11 @@ implementation
         call Tasklet.schedule();
     }
 
+
+    ieee154_simple_header_t* getieeHeader(message_t* msg)
+    {
+      return ((void*)msg) + 1; // +1 is because of length byte
+    }
     /**
      * Indicates the completion of a frame reception
      */
@@ -702,17 +707,17 @@ implementation
             uint8_t length;
 
             length = TST_RX_LENGTH;
-                
+
             if ( (PHY_RSSI & (1<<RX_CRC_VALID)) && length >= 3 && length <= call RadioPacket.maxPayloadLength() + 2 )
             {
                 uint8_t* data;
-                
+
                 data = getPayload(rxMsg);
                 getHeader(rxMsg)->length = length;
-                
+
                 // we do not store the CRC field
                 length -= 2;
-                
+
                 memcpy(data, (void*)&TRXFBST, length);
                 call PacketLinkQuality.set(rxMsg, (uint8_t)*(&TRXFBST + TST_RX_LENGTH));
                 call PacketTimeStamp.set(rxMsg, m_rx_packet_timestamp);
@@ -723,8 +728,24 @@ implementation
                 #ifdef RFA1_RSSI_ENERGY
                      call PacketRSSI.set(rxMsg, PHY_ED_LEVEL);
                 #endif
-                radioIrq |= IRQ_RX_END;
-                post task_tasklet_schedule();
+
+                /**
+                 * There is no good place in rfxlink layers to add proper check if we have just received broken packet.
+                 * Broken packets have correct CRC, however their header and/or payload might contain random data.
+                 * Maybe someone is sending intentionally packets that might cause havoc if not handled properly.
+                 * One of such packets if ACK that does not have ACK bit set in its fcf field.
+                 * SoftwareAckLayerC interprets it as normal data and gives it to upper layers.
+                 * ActiveMessageLayerP computes its payload length as: 5 - headerlength = 248.
+                 * Therefore application layer actually sees ACK packet with payload length 248.
+                 *
+                 */
+                if (getHeader(rxMsg)->length == 5 && !(getieeHeader(rxMsg)->fcf & (1<<1))) {
+                  RADIO_ASSERT(FALSE);
+                }
+                else {
+                  radioIrq |= IRQ_RX_END;
+                  post task_tasklet_schedule();
+                }
             }
         }
 
