@@ -491,6 +491,11 @@ implementation
 
   default tasklet_async event void RadioCCA.done(error_t error) { }
 
+
+  ieee154_simple_header_t* getieeHeader(message_t* msg)
+  {
+    return ((void*)msg) + 1; // +1 is because of length byte
+  }
   /*----------------- RECEIVE -----------------*/
 
   inline void downloadMessage()
@@ -499,52 +504,48 @@ implementation
 
         atomic m_rx_allowed = FALSE;
 
-        if (signal RadioReceive.header(rxMsg)) {
-            sendSignal = TRUE;
+        /**
+         * There is no good place in rfxlink layers to add proper check if we have just received broken packet.
+         * Broken packets have correct CRC, however their header and/or payload might contain random data.
+         * Maybe someone is sending intentionally packets that might cause havoc if not handled properly.
+         * One of such packets if ACK that does not have ACK bit set in its fcf field.
+         * SoftwareAckLayerC interprets it as normal data and gives it to upper layers.
+         * ActiveMessageLayerP computes its payload length as: 5 - headerlength = 248.
+         * Therefore application layer actually sees ACK packet with payload length 248.
+         *
+         */
+        if (getHeader(rxMsg)->length == 5 && !(getieeHeader(rxMsg)->fcf & (1<<1))) {
+            RADIO_ASSERT(FALSE);
+            state = STATE_RX_ON;
+            cmd = CMD_NONE;
         }
-
-        state = STATE_RX_ON;
-
-        #ifdef RADIO_DEBUG_MESSAGES
-            if( call DiagMsg.record() )
-            {
-              length = getHeader(rxMsg)->length;
-
-              call DiagMsg.chr('r');
-              call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
-              call DiagMsg.uint16(call LocalTime.get());
-              call DiagMsg.int8(sendSignal ? length : -length);
-              call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
-              call DiagMsg.int8(call PacketRSSI.isSet(rxMsg) ? call PacketRSSI.get(rxMsg) : -1);
-              call DiagMsg.uint8(call PacketLinkQuality.isSet(rxMsg) ? call PacketLinkQuality.get(rxMsg) : 0);
-              call DiagMsg.send();
+        else {
+            if (signal RadioReceive.header(rxMsg)) {
+                sendSignal = TRUE;
             }
-        #endif
 
-        cmd = CMD_NONE;
-/*
-        {
-            // debugging. print out the whole packet if the source address is not one of the allowed addresses.
+            state = STATE_RX_ON;
+            cmd = CMD_NONE;
 
-            uint8_t length = getHeader(rxMsg)->length;
-            uint8_t* data = getPayload(rxMsg);
-
-            if (length > 10) {
-                uint16_t source = *((uint16_t*)getHeader(rxMsg)+4);
-                if (source != 0x93ec && source != 0xc6b7 && source != 0xdfca && source != 0xe70e && source != 0xf3bd && source != 0x8888)
+            #ifdef RADIO_DEBUG_MESSAGES
+                if( call DiagMsg.record() )
                 {
-                    uint8_t i;
-                    printf("RF %04X %u\n", source, length);
-                    for (i = 0; i < length; i++) {
-                        printf("%02X", data[i]);
-                    }
-                    printf("\n");
+                  length = getHeader(rxMsg)->length;
+
+                  call DiagMsg.chr('r');
+                  call DiagMsg.uint32(call PacketTimeStamp.isValid(rxMsg) ? call PacketTimeStamp.timestamp(rxMsg) : 0);
+                  call DiagMsg.uint16(call LocalTime.get());
+                  call DiagMsg.int8(sendSignal ? length : -length);
+                  call DiagMsg.hex8s(getPayload(rxMsg), length - 2);
+                  call DiagMsg.int8(call PacketRSSI.isSet(rxMsg) ? call PacketRSSI.get(rxMsg) : -1);
+                  call DiagMsg.uint8(call PacketLinkQuality.isSet(rxMsg) ? call PacketLinkQuality.get(rxMsg) : 0);
+                  call DiagMsg.send();
                 }
+            #endif
+
+            if (sendSignal) {
+                rxMsg = signal RadioReceive.receive(rxMsg);
             }
-        }
-*/
-        if (sendSignal) {
-            rxMsg = signal RadioReceive.receive(rxMsg);
         }
 
         atomic m_rx_allowed = TRUE;
@@ -689,10 +690,6 @@ implementation
     }
 
 
-    ieee154_simple_header_t* getieeHeader(message_t* msg)
-    {
-      return ((void*)msg) + 1; // +1 is because of length byte
-    }
     /**
      * Indicates the completion of a frame reception
      */
@@ -729,23 +726,9 @@ implementation
                      call PacketRSSI.set(rxMsg, PHY_ED_LEVEL);
                 #endif
 
-                /**
-                 * There is no good place in rfxlink layers to add proper check if we have just received broken packet.
-                 * Broken packets have correct CRC, however their header and/or payload might contain random data.
-                 * Maybe someone is sending intentionally packets that might cause havoc if not handled properly.
-                 * One of such packets if ACK that does not have ACK bit set in its fcf field.
-                 * SoftwareAckLayerC interprets it as normal data and gives it to upper layers.
-                 * ActiveMessageLayerP computes its payload length as: 5 - headerlength = 248.
-                 * Therefore application layer actually sees ACK packet with payload length 248.
-                 *
-                 */
-                if (getHeader(rxMsg)->length == 5 && !(getieeHeader(rxMsg)->fcf & (1<<1))) {
-                  RADIO_ASSERT(FALSE);
-                }
-                else {
-                  radioIrq |= IRQ_RX_END;
-                  post task_tasklet_schedule();
-                }
+                radioIrq |= IRQ_RX_END;
+                post task_tasklet_schedule();
+
             }
         }
 
