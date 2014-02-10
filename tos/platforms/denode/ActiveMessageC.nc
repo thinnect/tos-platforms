@@ -76,7 +76,6 @@ implementation
 	PacketTimeStampRadio = MessageC;
 	PacketTimeStampMilli = MessageC;
 
-	components RFA1PacketRssiC;
 	PacketLQI = MessageC.PacketLinkQuality;
-	PacketRSSI = RFA1PacketRssiC;
+	PacketRSSI = MessageC.PacketRSSI;
 }
