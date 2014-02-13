@@ -730,6 +730,9 @@ implementation
                 post task_tasklet_schedule();
 
             }
+            else {
+                cmd = CMD_NONE;
+            }
         }
 
         // reset dynamic frame buffer protection
@@ -743,7 +746,7 @@ implementation
    */
   AVR_NONATOMIC_HANDLER(TRX24_RX_START_vect){
     RADIO_ASSERT( ! radioIrq );
-	if (cmd != CMD_TURNOFF)
+	if (cmd != CMD_TURNOFF && m_rx_allowed)
 	{
 	    atomic {
                 radioIrq |= IRQ_RX_START;
