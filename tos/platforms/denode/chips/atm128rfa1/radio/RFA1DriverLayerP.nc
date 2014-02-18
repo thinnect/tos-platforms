@@ -730,7 +730,10 @@ implementation
                 post task_tasklet_schedule();
 
             }
-            else {
+            else if (cmd == CMD_RECEIVE)
+            {
+                // Change to CMD_NONE only if we are in receiving state.
+                // In rare cases CMD_TRANSMIT could be pending because radio interrupts are not yet serviced.
                 cmd = CMD_NONE;
             }
         }
