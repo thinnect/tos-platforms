@@ -98,10 +98,6 @@ implementation
 	#define __LOG_LEVEL__ ( LOG_LEVEL_RFA1 & BASE_LOG_LEVEL )
 	#include "log.h"
 
-  #warning RADIO TURN OFF BUG FIX!
-  #warning RX OVERWRITE BUG FIX!
-  #warning EXPERIMENTAL SEND/RECEIVE MSG OVERWRITE FIX!
-
   rfa1_header_t* getHeader(message_t* msg)
   {
     return ((void*)msg) + call Config.headerLength(msg);
@@ -131,7 +127,7 @@ implementation
     STATE_BUSY_TX_2_RX_ON = 6,
   };
 
-  tasklet_norace uint8_t cmd;
+  norace uint8_t cmd;
   enum
   {
     CMD_NONE = 0,    // the state machine has stopped
@@ -234,7 +230,7 @@ implementation
     else if( channel == c )
       return EALREADY;
 
-    channel = c;
+    atomic channel = c;
     cmd = CMD_CHANNEL;
     call Tasklet.schedule();
 
@@ -248,7 +244,7 @@ implementation
 
 
     PHY_CC_CCA=RFA1_CCA_MODE_VALUE|channel;
-    m_rx_packet_channel = channel;
+    atomic m_rx_packet_channel = channel;
 
     if( state == STATE_RX_ON )
       state = STATE_TRX_OFF_2_RX_ON;
@@ -544,7 +540,9 @@ implementation
             #endif
 
             if (sendSignal) {
-                rxMsg = signal RadioReceive.receive(rxMsg);
+                message_t* tmp;
+                tmp = signal RadioReceive.receive(rxMsg);
+                atomic rxMsg = tmp;
             }
         }
 
@@ -565,13 +563,11 @@ implementation
 
   void serviceRadio()
   {
-    uint32_t time;
     uint8_t irq;
     uint8_t temp;
 
     atomic
     {
-      time = call SfdCapture.get();
       irq = radioIrq;
       radioIrq = IRQ_NONE;
     }
