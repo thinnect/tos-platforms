@@ -173,6 +173,7 @@ implementation
   uint32_t m_rx_packet_timestamp;
   uint8_t  m_rx_packet_channel;
   bool  m_rx_allowed = TRUE;
+  bool m_download_valid = FALSE;
 
   /*----------------- INIT -----------------*/
 
@@ -374,8 +375,9 @@ implementation
     uint8_t* data;
     void* timesync;
 
-    if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq )
+    if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq ) {
       return EBUSY;
+    }
 
     length = (call PacketTransmitPower.isSet(msg) ?
         call PacketTransmitPower.get(msg) : RFA1_DEF_RFPOWER) & RFA1_TX_PWR_MASK;
@@ -386,9 +388,9 @@ implementation
       PHY_TX_PWR=RFA1_PA_BUF_LT | RFA1_PA_LT | txPower<<TX_PWR0;
     }
 
-    if( call Config.requiresRssiCca(msg)
-          && (PHY_RSSI & RFA1_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
+    if( call Config.requiresRssiCca(msg) && (PHY_RSSI & RFA1_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) ) {
       return EBUSY;
+    }
 
     TRX_STATE = CMD_PLL_ON;
 
@@ -497,6 +499,11 @@ implementation
   inline void downloadMessage()
   {
         bool sendSignal = FALSE;
+        bool download_valid;
+        atomic {
+          download_valid = m_download_valid;
+          m_download_valid = FALSE;
+        }
 
         atomic m_rx_allowed = FALSE;
 
@@ -510,7 +517,7 @@ implementation
          * Therefore application layer actually sees ACK packet with payload length 248.
          *
          */
-        if (getHeader(rxMsg)->length == 5 && !(getieeHeader(rxMsg)->fcf & (1<<1))) {
+        if (!download_valid || (getHeader(rxMsg)->length == 5 && !(getieeHeader(rxMsg)->fcf & (1<<1)))) {
             RADIO_ASSERT(FALSE);
             state = STATE_RX_ON;
             cmd = CMD_NONE;
@@ -722,6 +729,7 @@ implementation
                      call PacketRSSI.set(rxMsg, PHY_ED_LEVEL);
                 #endif
 
+                atomic m_download_valid = TRUE;
                 radioIrq |= IRQ_RX_END;
                 post task_tasklet_schedule();
 
@@ -732,6 +740,15 @@ implementation
                 // In rare cases CMD_TRANSMIT could be pending because radio interrupts are not yet serviced.
                 cmd = CMD_NONE;
             }
+            else {
+                // Sometimes RX_START and RX_END interrupts come abnormally quickly.
+                // Therefore in the middle of serviceRadio() RX_END happens and it has not set cmd to CMD_RECEIVE.
+                // Moreover RX_END comes with invalid packet and it ends up here. So we have to nicely discard it.
+                atomic m_download_valid = FALSE;
+                radioIrq |= IRQ_RX_END;
+                post task_tasklet_schedule();
+            }
+
         }
 
         // reset dynamic frame buffer protection
