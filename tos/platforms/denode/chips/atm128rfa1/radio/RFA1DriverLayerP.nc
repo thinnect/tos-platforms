@@ -373,7 +373,6 @@ implementation
     uint32_t time;
     uint8_t length;
     uint8_t* data;
-    void* timesync;
 
     if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq ) {
       return EBUSY;
@@ -393,9 +392,6 @@ implementation
     }
 
     TRX_STATE = CMD_PLL_ON;
-
-    // do something useful, just to wait a little
-    timesync = call PacketTimeSyncOffset.isSet(msg) ? ((void*)msg) + call PacketTimeSyncOffset.get(msg) : 0;
 
     data = getPayload(msg);
     length = getHeader(msg)->length;
@@ -425,18 +421,11 @@ implementation
 
     RADIO_ASSERT( ! radioIrq );
 
-    // fix the time stamp
-    if( timesync != 0 )
-      *(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time;
-
     // then upload the whole payload
     memcpy((void*)(&TRXFBST+1), data, length);
 
     // go back to RX_ON state when finished
     TRX_STATE=CMD_RX_ON;
-
-    if( timesync != 0 )
-      *(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time;
 
     call PacketTimeStamp.set(msg, time);
 
