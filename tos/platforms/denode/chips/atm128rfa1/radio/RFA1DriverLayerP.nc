@@ -39,6 +39,11 @@
 * 2013-09-05
 * Bug fix for rx packet overwrite. add RX_SAFE_MODE.
 * Author: Elmo Trolla
+*
+* 2014-03-28
+* Bug fix for RadioPacket.clear()
+* Auhtor Madis Uusjarv
+*
 */
 
 #include <RFA1DriverLayer.h>
@@ -886,7 +891,8 @@ implementation
 
   async command void RadioPacket.clear(message_t* msg)
   {
-    // all flags are automatically cleared
+    memset(getHeader(msg), 0x00, call RadioPacket.headerLength(msg));
+    memset(getMeta(msg), 0x00, call RadioPacket.metadataLength(msg));
   }
 
   /*----------------- PacketTransmitPower -----------------*/
