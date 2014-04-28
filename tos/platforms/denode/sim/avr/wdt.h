@@ -5,6 +5,7 @@
 
 void wdt_reset();
 void wdt_enable(uint16_t t);
+void wdt_disable();
 
 #define WDTO_15MS   0
 #define WDTO_30MS   1

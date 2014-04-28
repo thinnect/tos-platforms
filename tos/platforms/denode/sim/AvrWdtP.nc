@@ -1,4 +1,5 @@
 module AvrWdtP {
+	provides interface Init;
 	uses interface Timer<TMilli>;
 }
 implementation
@@ -32,6 +33,14 @@ implementation
 		8000, // "WDTO_8S",    // 9
 	};
 
+	command error_t Init.init()
+	{
+		#ifdef TOSSIM_AVR_WDTON
+			wdt_enable(WDTO_8S);
+		#endif // TOSSIM_AVR_WDTON
+		return SUCCESS;
+	}
+
 	void wdt_reset() @C()
 	{
 		dbg("avrwdt", "avrwdt: wdt_reset %s\n", labels[m_wdt]);
@@ -47,6 +56,12 @@ implementation
 			wdt_reset();
 		}
 		else dbg("avrwdt", "avrwdt: wdt_enable value %u not supported!\n", t);
+	}
+
+	void wdt_disable() @C()
+	{
+		dbg("avrwdt", "avrwdt: wdt_disable()\n");
+		call Timer.stop();
 	}
 
 	event void Timer.fired()
