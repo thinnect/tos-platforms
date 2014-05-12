@@ -49,6 +49,11 @@ configuration ActiveMessageC
 
 		interface PacketField<uint8_t> as PacketLQI;
 		interface PacketField<int8_t> as PacketRSSI;
+
+#ifdef CONGESTION_CONTROL_ENABLED
+		interface PacketField<bool> as PacketCongested;
+		interface PacketField<bool> as PacketDropped;
+#endif
 	}
 }
 
@@ -59,8 +64,6 @@ implementation
 	SplitControl = MessageC;
 
 	AMSend = MessageC;
-	Receive = MessageC.Receive;
-	Snoop = MessageC.Snoop;
 	SendNotifier = MessageC;
 
 	Packet = MessageC;
@@ -78,4 +81,26 @@ implementation
 
 	PacketLQI = MessageC.PacketLinkQuality;
 	PacketRSSI = MessageC.PacketRSSI;
+
+#ifdef CONGESTION_CONTROL_ENABLED
+	PacketCongested = MessageC.PacketCongested;
+	PacketDropped = MessageC.PacketDropped;
+#endif
+
+	#ifdef AMFILTER
+		#warning USING AMFILTER
+		components AMFilterP, AMFILTER as Filter;
+		Filter.AMPacket -> MessageC;
+
+		AMFilterP.SubReceive -> MessageC.Receive;
+		AMFilterP.SubSnoop -> MessageC.Snoop;
+		AMFilterP.AMPacket -> MessageC;
+		AMFilterP.AMFilter -> Filter;
+
+		Receive = AMFilterP.Receive;
+		Snoop = AMFilterP.Snoop;
+	#else
+		Receive = MessageC.Receive;
+		Snoop = MessageC.Snoop;
+	#endif
 }
