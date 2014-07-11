@@ -99,9 +99,6 @@ module RFA1DriverLayerP
 
 implementation
 {
-	#define __MODUUL__ "RFA1"
-	#define __LOG_LEVEL__ ( LOG_LEVEL_RFA1 & BASE_LOG_LEVEL )
-	#include "log.h"
 
   rfa1_header_t* getHeader(message_t* msg)
   {
