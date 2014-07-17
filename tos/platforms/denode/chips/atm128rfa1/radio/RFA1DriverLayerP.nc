@@ -243,10 +243,11 @@ implementation
   inline void changeChannel()
   {
     RADIO_ASSERT( cmd == CMD_CHANNEL );
-    RADIO_ASSERT( state == STATE_SLEEP || state == STATE_TRX_OFF || state == STATE_RX_ON );
+    RADIO_ASSERT( state == STATE_TRX_OFF || state == STATE_RX_ON );
 
+    if( state != STATE_SLEEP )
+      PHY_CC_CCA=RFA1_CCA_MODE_VALUE | channel;
 
-    PHY_CC_CCA=RFA1_CCA_MODE_VALUE|channel;
     atomic m_rx_packet_channel = channel;
 
     if( state == STATE_RX_ON )
@@ -273,6 +274,9 @@ implementation
     else if( cmd == CMD_TURNON && state == STATE_TRX_OFF )
     {
       RADIO_ASSERT( ! radioIrq );
+
+      // setChannel was ignored in SLEEP because the register didn't work
+      PHY_CC_CCA=RFA1_CCA_MODE_VALUE | channel;
 
       IRQ_MASK = 1<<PLL_LOCK_EN | 1<<TX_END_EN | 1<<RX_END_EN | 1<< RX_START_EN | 1<<CCA_ED_DONE_EN;
       call McuPowerState.update();
