@@ -112,8 +112,8 @@ implementation
   };
 
   command error_t Init.init() {
-  	error_t err;
-  	err = call Resource.immediateRequest();
+  	error_t err = call Resource.immediateRequest();
+  	(void)err; // Suppress unused-but-set-variable
   	logger(LOG_DEBUG2, "init(%u)", err);
   	// SPI init?
     call Select.makeOutput();
