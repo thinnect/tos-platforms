@@ -72,6 +72,7 @@ module RFA1DriverLayerP
     interface LinkPacketMetadata;
 
     interface McuPowerOverride;
+    interface Set<uint8_t> as SetTransmitPower;
   }
 
   uses
@@ -164,6 +165,7 @@ implementation
   norace uint8_t radioIrq;
 
   tasklet_norace uint8_t txPower;
+  tasklet_norace uint8_t defaultTxPower;
   tasklet_norace uint8_t channel;
 
   tasklet_norace message_t* rxMsg;
@@ -203,6 +205,7 @@ implementation
     PHY_TX_PWR = RFA1_PA_BUF_LT | RFA1_PA_LT | (RFA1_DEF_RFPOWER&RFA1_TX_PWR_MASK)<<TX_PWR0;
 
     txPower = RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK;
+    defaultTxPower = RFA1_DEF_RFPOWER & RFA1_TX_PWR_MASK;
     channel = RFA1_DEF_CHANNEL & RFA1_CHANNEL_MASK;
     TRX_CTRL_1 |= 1<<TX_AUTO_CRC_ON;
     TRX_CTRL_2 |= 1<<RX_SAFE_MODE;
@@ -389,7 +392,7 @@ implementation
     }
 
     length = (call PacketTransmitPower.isSet(msg) ?
-        call PacketTransmitPower.get(msg) : RFA1_DEF_RFPOWER) & RFA1_TX_PWR_MASK;
+        call PacketTransmitPower.get(msg) : defaultTxPower) & RFA1_TX_PWR_MASK;
 
     if( length != txPower )
     {
@@ -866,6 +869,12 @@ implementation
       else
          return ATM128_POWER_DOWN;
    }
+
+  /*----------------- Tx power -----------------*/
+
+  command void SetTransmitPower.set(uint8_t power) {
+    defaultTxPower = power;
+  }
 
   /*----------------- RadioPacket -----------------*/
 
