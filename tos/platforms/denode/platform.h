@@ -32,6 +32,11 @@ inline void doAssertEquals2(uint32_t a, uint32_t b, uint16_t errorCode) __attrib
 #define ccassertSuccess(error, output) doAssertSuccess2((error), (output))
 #define ccassertEquals(a, b, output) doAssertEquals2((a), (b), (output))
 
+// Tossim uses nanodbg for message passing with simulation environment
+#if !defined(TOSSIM_ENABLE_NANOMSG_DEBUG_CHANNEL)
+	#define nanodbg(s, ...)
+#endif
+
 /* Disable watchdog or enable with 8 second timeout if WDTON fuse is programmed. */
 /* (Disabling would result in a 16ms watchdog if WDTON is programmed and user
  * applications might not initialize fast enough) */
