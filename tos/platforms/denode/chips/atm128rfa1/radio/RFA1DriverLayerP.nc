@@ -201,6 +201,11 @@ implementation
     CLR_BIT(PORTG,0);
     SET_BIT(DDRF, 3);	// DIG0
     CLR_BIT(PORTF, 3);
+
+    #ifdef defined(PLATFORM_DENODEXR)
+      SET_BIT(DDRF, 5); // LNA_EN
+      CLR_BIT(PORTF, 5);
+    #endif
 #endif
     PHY_TX_PWR = RFA1_PA_BUF_LT | RFA1_PA_LT | (RFA1_DEF_RFPOWER&RFA1_TX_PWR_MASK)<<TX_PWR0;
 
@@ -287,6 +292,10 @@ implementation
       TRX_STATE = CMD_RX_ON;
 #ifdef RFA1_ENABLE_PA
       SET_BIT(TRX_CTRL_1, PA_EXT_EN);
+
+      #if defined(PLATFORM_DENODEXR)
+        SET_BIT(PORTF, 5); // turn on frontend LNA
+      #endif
 #endif
 
       state = STATE_TRX_OFF_2_RX_ON;
@@ -295,6 +304,10 @@ implementation
     {
 #ifdef RFA1_ENABLE_PA
       CLR_BIT(TRX_CTRL_1, PA_EXT_EN);
+
+      #if defined(PLATFORM_DENODEXR)
+        CLR_BIT(PORTF, 5); // turn off frontend LNA
+      #endif
 #endif
       TRX_STATE = CMD_FORCE_TRX_OFF;
 
@@ -433,6 +446,13 @@ implementation
     {
         time = call LocalTime.get();
         TRX_STATE = CMD_TX_START;
+
+#ifdef RFA1_ENABLE_PA
+      #if defined(PLATFORM_DENODEXR)
+        CLR_BIT(PORTF, 5); // turn off frontend LNA
+      #endif
+#endif
+
     }
 
     time += TX_SFD_DELAY;
@@ -699,11 +719,20 @@ implementation
    */
   AVR_NONATOMIC_HANDLER(TRX24_TX_END_vect){
     RADIO_ASSERT( ! radioIrq );
-	if (cmd != CMD_TURNOFF)
-	{
-	    atomic radioIrq |= IRQ_TX_END;
-	    call Tasklet.schedule();
-	}
+    if (cmd != CMD_TURNOFF)
+    {
+      atomic radioIrq |= IRQ_TX_END;
+
+    // radio goes to rx mode after transmission
+    // turn on LNA
+#ifdef RFA1_ENABLE_PA
+      #if defined(PLATFORM_DENODEXR)
+        SET_BIT(PORTF, 5); // turn on frontend LNA
+      #endif
+#endif
+
+      call Tasklet.schedule();
+    }
   }
 
     task void task_tasklet_schedule()
