@@ -222,6 +222,7 @@ implementation
 
     state = STATE_SLEEP;
 
+    CLR_BIT(RX_SYN, 6); // disable RX_OVERRIDE
     return SUCCESS;
   }
 
