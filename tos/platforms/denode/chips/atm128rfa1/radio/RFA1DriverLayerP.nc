@@ -205,6 +205,10 @@ implementation
     #ifdef defined(PLATFORM_DENODEXR)
       SET_BIT(DDRF, 5); // LNA_EN
       CLR_BIT(PORTF, 5);
+
+      SET_BIT(DDRG, 1);
+      CLR_BIT(PORTG, 1); // turn off frontend vreg
+
     #endif
 #endif
     PHY_TX_PWR = RFA1_PA_BUF_LT | RFA1_PA_LT | (RFA1_DEF_RFPOWER&RFA1_TX_PWR_MASK)<<TX_PWR0;
@@ -335,18 +339,21 @@ implementation
 
   tasklet_async command error_t RadioState.turnOff()
   {
-	if( cmd != CMD_NONE )
-    	return EBUSY;
-   else if( state == STATE_SLEEP )
-   		return EALREADY;
+    if( cmd != CMD_NONE )
+      return EBUSY;
+    else if( state == STATE_SLEEP )
+      return EALREADY;
 
-   atomic
-   {
-       cmd = CMD_TURNOFF;
-       radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
-   }
-   call Tasklet.schedule();
-   return SUCCESS;
+    SET_BIT(DDRG, 1);
+    CLR_BIT(PORTG, 1); // turn off frontend vreg
+
+    atomic
+    {
+      cmd = CMD_TURNOFF;
+      radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
+    }
+    call Tasklet.schedule();
+    return SUCCESS;
   }
 
   tasklet_async command error_t RadioState.standby()
@@ -372,13 +379,15 @@ implementation
     else if( state == STATE_RX_ON )
       return EALREADY;
 
-	atomic
-	{
-	    cmd = CMD_TURNON;
-	    radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
-	}
-    call Tasklet.schedule();
+    SET_BIT(DDRG, 1);
+    SET_BIT(PORTG, 1); // turn on frontend vreg
 
+    atomic
+    {
+      cmd = CMD_TURNON;
+      radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
+    }
+    call Tasklet.schedule();
     return SUCCESS;
   }
 
