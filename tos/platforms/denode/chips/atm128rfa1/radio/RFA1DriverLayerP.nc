@@ -202,7 +202,7 @@ implementation
     SET_BIT(DDRF, 3);	// DIG0
     CLR_BIT(PORTF, 3);
 
-    #ifdef defined(PLATFORM_DENODEXRB)
+    #if defined(PLATFORM_DENODEXRB)
       SET_BIT(DDRF, 5); // LNA_EN
       CLR_BIT(PORTF, 5);
 
@@ -344,8 +344,10 @@ implementation
     else if( state == STATE_SLEEP )
       return EALREADY;
 
+#if defined(PLATFORM_DENODEXRB)
     SET_BIT(DDRG, 1);
     CLR_BIT(PORTG, 1); // turn off frontend vreg
+#endif
 
     atomic
     {
@@ -379,8 +381,10 @@ implementation
     else if( state == STATE_RX_ON )
       return EALREADY;
 
+#if defined(PLATFORM_DENODEXRB)
     SET_BIT(DDRG, 1);
     SET_BIT(PORTG, 1); // turn on frontend vreg
+#endif
 
     atomic
     {
