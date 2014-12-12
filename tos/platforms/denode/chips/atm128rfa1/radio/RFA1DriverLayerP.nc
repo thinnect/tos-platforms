@@ -202,7 +202,7 @@ implementation
     SET_BIT(DDRF, 3);	// DIG0
     CLR_BIT(PORTF, 3);
 
-    #ifdef defined(PLATFORM_DENODEXR)
+    #ifdef defined(PLATFORM_DENODEXRB)
       SET_BIT(DDRF, 5); // LNA_EN
       CLR_BIT(PORTF, 5);
 
@@ -298,7 +298,7 @@ implementation
 #ifdef RFA1_ENABLE_PA
       SET_BIT(TRX_CTRL_1, PA_EXT_EN);
 
-      #if defined(PLATFORM_DENODEXR)
+      #if defined(PLATFORM_DENODEXRB)
         SET_BIT(PORTF, 5); // turn on frontend LNA
       #endif
 #endif
@@ -310,7 +310,7 @@ implementation
 #ifdef RFA1_ENABLE_PA
       CLR_BIT(TRX_CTRL_1, PA_EXT_EN);
 
-      #if defined(PLATFORM_DENODEXR)
+      #if defined(PLATFORM_DENODEXRB)
         CLR_BIT(PORTF, 5); // turn off frontend LNA
       #endif
 #endif
@@ -458,7 +458,7 @@ implementation
         TRX_STATE = CMD_TX_START;
 
 #ifdef RFA1_ENABLE_PA
-      #if defined(PLATFORM_DENODEXR)
+      #if defined(PLATFORM_DENODEXRB)
         CLR_BIT(PORTF, 5); // turn off frontend LNA
       #endif
 #endif
@@ -736,7 +736,7 @@ implementation
     // radio goes to rx mode after transmission
     // turn on LNA
 #ifdef RFA1_ENABLE_PA
-      #if defined(PLATFORM_DENODEXR)
+      #if defined(PLATFORM_DENODEXRB)
         SET_BIT(PORTF, 5); // turn on frontend LNA
       #endif
 #endif
