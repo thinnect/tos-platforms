@@ -56,6 +56,10 @@ configuration ActiveMessageC
 #endif
 
 		interface PacketField<uint8_t> as LinkType;
+
+#ifdef LOW_POWER_LISTENING
+		interface PacketField<uint16_t> as PacketRetryCount;
+#endif
 	}
 }
 
@@ -85,6 +89,10 @@ implementation
 	PacketRSSI = MessageC.PacketRSSI;
 
 	LinkType = MessageC.LinkType;
+
+#ifdef LOW_POWER_LISTENING
+	PacketRetryCount = MessageC.PacketRetryCount;
+#endif
 
 #ifdef CONGESTION_CONTROL_ENABLED
 	PacketCongested = MessageC.PacketCongested;
