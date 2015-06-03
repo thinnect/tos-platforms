@@ -54,6 +54,8 @@ configuration ActiveMessageC
 		interface PacketField<bool> as PacketCongested;
 		interface PacketField<bool> as PacketDropped;
 #endif
+
+		interface PacketField<uint8_t> as LinkType;
 	}
 }
 
@@ -81,6 +83,8 @@ implementation
 
 	PacketLQI = MessageC.PacketLinkQuality;
 	PacketRSSI = MessageC.PacketRSSI;
+
+	LinkType = MessageC.LinkType;
 
 #ifdef CONGESTION_CONTROL_ENABLED
 	PacketCongested = MessageC.PacketCongested;
