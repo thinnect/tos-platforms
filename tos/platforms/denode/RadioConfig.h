@@ -60,7 +60,7 @@ enum
 #else
 	RFA1_PA_BUF_LT=PA_BUF_LT_6US,
 	RFA1_PA_LT=PA_LT_2US,
-#endif	
+#endif
 };
 
 /* This is the default value of the TX_PWR field of the PHY_TX_PWR register. */
@@ -93,5 +93,10 @@ typedef uint32_t tradio_size;
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
 #define RADIO_ALARM_MILLI_EXP	6
+
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RFA1_NEIGHBORHOOD_SIZE 15
 
 #endif//__RADIOCONFIG_H__
