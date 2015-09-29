@@ -31,6 +31,7 @@ PFLAGS += -I%T/lib/power
 PFLAGS += -I%T/lib/rfxlink/layers
 PFLAGS += -I%T/lib/rfxlink/util
 PFLAGS += -I%T/lib/diagmsg
+PFLAGS += -I%T/lib/tosboot/avr
 
 PFLAGS += -fnesc-target=avr
 PFLAGS += -fnesc-no-debug
