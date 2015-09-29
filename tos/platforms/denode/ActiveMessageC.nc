@@ -43,7 +43,7 @@ configuration ActiveMessageC
 		interface RadioChannel;
 
 		interface PacketField<uint8_t> as PacketLQI;
-		interface PacketField<int8_t> as PacketRSSI;
+		interface PacketField<uint8_t> as PacketRSSI;
 
 		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
 		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
