@@ -25,12 +25,10 @@
 
 #include <RFA1Radio.h>
 #include <Serial.h>
-#include "LiteSerial.h"
 
 typedef union message_header {
 	rfa1packet_header_t rfa1;
 	serial_header_t serial;
-	lite_serial_header_t lite_serial;
 } message_header_t;
 
 typedef union message_footer {
@@ -39,7 +37,6 @@ typedef union message_footer {
 
 typedef union message_metadata {
 	rfa1packet_metadata_t rfa1;
-	lite_serial_metadata_t lite_serial;
 } message_metadata_t;
 
 #endif

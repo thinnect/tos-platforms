@@ -1,0 +1,34 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = denode
+
+PROGRAMMER ?= avrdude
+
+ifeq ($(PROGRAMMER),avrdude)
+  PROGRAMMER_PART ?= -pm128rfa1
+endif
+
+# 16 MHz
+AVR_FUSE_L ?= 0xff
+
+# OCDEN|JTAGEN|SPIEN|WDTON|EESAVE|BOOTSZ|BOOTRST
+#   1  |   0  |  0  |  1  |   1  |  00  |   0
+# No debugging, JTAG+SPI, no WDT, no EESAVE, 8K bootloader
+AVR_FUSE_H ?= 0x98
+
+# Brown-out at 2.4V
+AVR_FUSE_E ?= 0xf8
+
+ifdef RADIO_CHANNEL
+	PFLAGS += -DDEF_RADIO_CHANNEL=$(RADIO_CHANNEL)
+	PFLAGS += -DRFA1_DEF_CHANNEL=$(RADIO_CHANNEL)
+endif
+
+PFLAGS += -mmcu=atmega128rfa1
+
+$(call TOSMake_include_platform,denode)
+
+$(call TOSMake_include_make_platform,avr)
+
+denode: $(BUILD_DEPS)
+        @:

@@ -3,7 +3,7 @@ module RFAPowerOverrideP {
 }
 implementation {
 
-	#warning "Denode sleep state fix"
+	#warning "RFA1 sleep state fix"
 
 	/**
 	 * Check RFA1 radio state, 0 is off and 0x0F is sleep.

@@ -39,27 +39,14 @@ configuration ActiveMessageC
 
 		interface PacketAcknowledgements;
 		interface LowPowerListening;
-#ifdef PACKET_LINK
 		interface PacketLink;
-#endif
 		interface RadioChannel;
-
-		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
-		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 
 		interface PacketField<uint8_t> as PacketLQI;
 		interface PacketField<int8_t> as PacketRSSI;
 
-#ifdef CONGESTION_CONTROL_ENABLED
-		interface PacketField<bool> as PacketCongested;
-		interface PacketField<bool> as PacketDropped;
-#endif
-
-		interface PacketField<uint8_t> as LinkType;
-
-#ifdef LOW_POWER_LISTENING
-		interface PacketField<uint16_t> as PacketRetryCount;
-#endif
+		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
 	}
 }
 
@@ -70,6 +57,8 @@ implementation
 	SplitControl = MessageC;
 
 	AMSend = MessageC;
+	Receive = MessageC.Receive;
+	Snoop = MessageC.Snoop;
 	SendNotifier = MessageC;
 
 	Packet = MessageC;
@@ -77,42 +66,12 @@ implementation
 
 	PacketAcknowledgements = MessageC;
 	LowPowerListening = MessageC;
-#ifdef PACKET_LINK
 	PacketLink = MessageC;
-#endif
 	RadioChannel = MessageC;
-
-	PacketTimeStampRadio = MessageC;
-	PacketTimeStampMilli = MessageC;
 
 	PacketLQI = MessageC.PacketLinkQuality;
 	PacketRSSI = MessageC.PacketRSSI;
 
-	LinkType = MessageC.LinkType;
-
-#ifdef LOW_POWER_LISTENING
-	PacketRetryCount = MessageC.PacketRetryCount;
-#endif
-
-#ifdef CONGESTION_CONTROL_ENABLED
-	PacketCongested = MessageC.PacketCongested;
-	PacketDropped = MessageC.PacketDropped;
-#endif
-
-	#ifdef AMFILTER
-		#warning USING AMFILTER
-		components AMFilterP, AMFILTER as Filter;
-		Filter.AMPacket -> MessageC;
-
-		AMFilterP.SubReceive -> MessageC.Receive;
-		AMFilterP.SubSnoop -> MessageC.Snoop;
-		AMFilterP.AMPacket -> MessageC;
-		AMFilterP.AMFilter -> Filter;
-
-		Receive = AMFilterP.Receive;
-		Snoop = AMFilterP.Snoop;
-	#else
-		Receive = MessageC.Receive;
-		Snoop = MessageC.Snoop;
-	#endif
+	PacketTimeStampRadio = MessageC;
+	PacketTimeStampMilli = MessageC;
 }
