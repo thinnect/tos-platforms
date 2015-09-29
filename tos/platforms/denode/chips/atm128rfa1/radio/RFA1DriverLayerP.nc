@@ -79,7 +79,7 @@ module RFA1DriverLayerP
   {
     interface BusyWait<TMicro, uint16_t>;
     interface LocalTime<TRadio>;
-    interface AtmegaCapture<uint32_t> as SfdCapture;
+    interface HplAtmegaCapture<uint32_t> as SfdCapture;
 
     interface RFA1DriverConfig as Config;
 
@@ -91,6 +91,7 @@ module RFA1DriverLayerP
 
     interface Tasklet;
     interface McuPowerState;
+    interface AsyncStdControl as ExtAmpControl;
 
 #ifdef RADIO_DEBUG
     interface DiagMsg;
@@ -256,7 +257,7 @@ implementation
   inline void changeChannel()
   {
     RADIO_ASSERT( cmd == CMD_CHANNEL );
-    RADIO_ASSERT( state == STATE_TRX_OFF || state == STATE_RX_ON );
+    RADIO_ASSERT( state == STATE_SLEEP || state == STATE_TRX_OFF || state == STATE_RX_ON );
 
     if( state != STATE_SLEEP )
       PHY_CC_CCA=RFA1_CCA_MODE_VALUE | channel;
@@ -297,29 +298,39 @@ implementation
       TRX_STATE = CMD_RX_ON;
 #ifdef RFA1_ENABLE_PA
       SET_BIT(TRX_CTRL_1, PA_EXT_EN);
-
-      #if defined(PLATFORM_DENODEXRB)
-        SET_BIT(PORTF, 5); // turn on frontend LNA
+#endif
+#ifdef RFA1_ENABLE_EXT_ANT_SW
+      #ifdef RFA1_ANT_DIV_EN
+      ANT_DIV = 0x7f & (1<<ANT_DIV_EN | 1<<ANT_EXT_SW_EN);
+      #elif defined(RFA1_ANT_SEL1)
+      ANT_DIV = 0x7f & (1<<ANT_EXT_SW_EN | 1<<ANT_CTRL0);
+      #elif defined(RFA1_ANT_SEL0)
+      ANT_DIV = 0x7f & (1<<ANT_EXT_SW_EN | 2<<ANT_CTRL0);
+      #else
+      #error Neighter antenna is selected with ANT_EXT_SW_EN. You can choose between RFA1_ANT_DIV_EN, RFA1_ANT_SEL0, RFA1_ANT_SEL1
       #endif
 #endif
 
       state = STATE_TRX_OFF_2_RX_ON;
+      call ExtAmpControl.start();
     }
     else if( (cmd == CMD_TURNOFF || cmd == CMD_STANDBY) && state == STATE_RX_ON )
     {
 #ifdef RFA1_ENABLE_PA
       CLR_BIT(TRX_CTRL_1, PA_EXT_EN);
-
-      #if defined(PLATFORM_DENODEXRB)
-        CLR_BIT(PORTF, 5); // turn off frontend LNA
-      #endif
+#endif
+#ifdef RFA1_ENABLE_EXT_ANT_SW
+      ANT_DIV=3; //default value
 #endif
       TRX_STATE = CMD_FORCE_TRX_OFF;
 
       IRQ_MASK = 0;
+      radioIrq = IRQ_NONE;
+
       call McuPowerState.update();
 
       state = STATE_TRX_OFF;
+      call ExtAmpControl.stop();
     }
 
     if( cmd == CMD_TURNOFF && state == STATE_TRX_OFF )
@@ -344,17 +355,13 @@ implementation
     else if( state == STATE_SLEEP )
       return EALREADY;
 
-#if defined(PLATFORM_DENODEXRB)
-    SET_BIT(DDRG, 1);
-    CLR_BIT(PORTG, 1); // turn off frontend vreg
-#endif
-
     atomic
     {
       cmd = CMD_TURNOFF;
       radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
     }
     call Tasklet.schedule();
+
     return SUCCESS;
   }
 
@@ -371,6 +378,7 @@ implementation
 	    radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
 	}
     call Tasklet.schedule();
+
     return SUCCESS;
   }
 
@@ -381,17 +389,13 @@ implementation
     else if( state == STATE_RX_ON )
       return EALREADY;
 
-#if defined(PLATFORM_DENODEXRB)
-    SET_BIT(DDRG, 1);
-    SET_BIT(PORTG, 1); // turn on frontend vreg
-#endif
-
     atomic
     {
       cmd = CMD_TURNON;
       radioIrq = IRQ_NONE;    // clear radio IRQ, we want to stop radio, do not handle RX interrupt!
     }
     call Tasklet.schedule();
+
     return SUCCESS;
   }
 
@@ -409,14 +413,10 @@ implementation
     uint32_t time;
     uint8_t length;
     uint8_t* data;
-
-#ifndef DISABLE_RFA1_TIMESYNC
     void* timesync;
-#endif
 
-    if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq ) {
+    if( cmd != CMD_NONE || state != STATE_RX_ON || radioIrq )
       return EBUSY;
-    }
 
     length = (call PacketTransmitPower.isSet(msg) ?
         call PacketTransmitPower.get(msg) : defaultTxPower) & RFA1_TX_PWR_MASK;
@@ -427,16 +427,14 @@ implementation
       PHY_TX_PWR=RFA1_PA_BUF_LT | RFA1_PA_LT | txPower<<TX_PWR0;
     }
 
-    if( call Config.requiresRssiCca(msg) && (PHY_RSSI & RFA1_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) ) {
+    if( call Config.requiresRssiCca(msg)
+          && (PHY_RSSI & RFA1_RSSI_MASK) > ((rssiClear + rssiBusy) >> 3) )
       return EBUSY;
-    }
 
     TRX_STATE = CMD_PLL_ON;
 
-#ifndef DISABLE_RFA1_TIMESYNC
     // do something useful, just to wait a little
     timesync = call PacketTimeSyncOffset.isSet(msg) ? ((void*)msg) + call PacketTimeSyncOffset.get(msg) : 0;
-#endif
 
     data = getPayload(msg);
     length = getHeader(msg)->length;
@@ -460,24 +458,15 @@ implementation
     {
         time = call LocalTime.get();
         TRX_STATE = CMD_TX_START;
-
-#ifdef RFA1_ENABLE_PA
-      #if defined(PLATFORM_DENODEXRB)
-        CLR_BIT(PORTF, 5); // turn off frontend LNA
-      #endif
-#endif
-
     }
 
     time += TX_SFD_DELAY;
 
     RADIO_ASSERT( ! radioIrq );
 
-#ifndef DISABLE_RFA1_TIMESYNC
     // fix the time stamp
     if( timesync != 0 )
       *(timesync_relative_t*)timesync = (*(timesync_absolute_t*)timesync) - time;
-#endif
 
     // then upload the whole payload
     memcpy((void*)(&TRXFBST+1), data, length);
@@ -485,11 +474,8 @@ implementation
     // go back to RX_ON state when finished
     TRX_STATE=CMD_RX_ON;
 
-#ifndef DISABLE_RFA1_TIMESYNC
     if( timesync != 0 )
       *(timesync_absolute_t*)timesync = (*(timesync_relative_t*)timesync) + time;
-
-#endif
 
     call PacketTimeStamp.set(msg, time);
 
@@ -623,11 +609,13 @@ implementation
 
   void serviceRadio()
   {
+    uint32_t time;
     uint8_t irq;
     uint8_t temp;
 
     atomic
     {
+      time = call SfdCapture.get();
       irq = radioIrq;
       radioIrq = IRQ_NONE;
     }
@@ -676,12 +664,17 @@ implementation
         {
           temp = PHY_RSSI & RFA1_RSSI_MASK;
           rssiBusy += temp - (rssiBusy >> 2);
+
+          call PacketTimeStamp.set(rxMsg, time);
+
 #ifndef RFA1_RSSI_ENERGY
           call PacketRSSI.set(rxMsg, temp);
 #endif
         }
         else
         {
+          call PacketTimeStamp.clear(rxMsg);
+
 #ifndef RFA1_RSSI_ENERGY
           call PacketRSSI.clear(rxMsg);
 #endif
@@ -736,23 +729,14 @@ implementation
     if (cmd != CMD_TURNOFF)
     {
       atomic radioIrq |= IRQ_TX_END;
-
-    // radio goes to rx mode after transmission
-    // turn on LNA
-#ifdef RFA1_ENABLE_PA
-      #if defined(PLATFORM_DENODEXRB)
-        SET_BIT(PORTF, 5); // turn on frontend LNA
-      #endif
-#endif
-
       call Tasklet.schedule();
     }
   }
 
-    task void task_tasklet_schedule()
-    {
-        call Tasklet.schedule();
-    }
+  task void task_tasklet_schedule()
+  {
+      call Tasklet.schedule();
+  }
 
 
     /**
@@ -1058,5 +1042,15 @@ implementation
   async command bool LinkPacketMetadata.highChannelQuality(message_t* msg)
   {
     return call PacketLinkQuality.get(msg) > 200;
+  }
+
+/*----------------- ExtAmpControl -----------------*/
+
+  default async command error_t ExtAmpControl.start(){
+    return SUCCESS;
+  }
+
+  default async command error_t ExtAmpControl.stop(){
+    return SUCCESS;
   }
 }
