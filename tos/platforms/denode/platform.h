@@ -16,9 +16,8 @@
 #define TINYECC_AVR_ASM
 
 #include <avr/wdt.h>
-/* Disable watchdog or enable with 8 second timeout if WDTON fuse is programmed. */
-/* (Disabling would result in a 16ms watchdog if WDTON is programmed and user
- * applications might not initialize fast enough) */
+// Disable watchdog or enable with 8 second timeout if WDTON fuse is programmed.
+// Disabling would result in a 16ms watchdog if WDTON is programmed and user applications might not initialize fast enough.
 #define platform_bootstrap() { \
     MCUSR &= ~(1<<WDRF); \
 	wdt_reset(); \

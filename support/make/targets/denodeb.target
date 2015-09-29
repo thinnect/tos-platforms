@@ -26,7 +26,7 @@ endif
 
 PFLAGS += -mmcu=atmega256rfr2
 
-$(call TOSMake_include_platform,denode)
+$(call TOSMake_include_platform,denodeb)
 
 $(call TOSMake_include_make_platform,avr)
 
