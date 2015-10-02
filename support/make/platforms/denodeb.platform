@@ -19,7 +19,6 @@ PFLAGS += -I%T/chips/atm128rfa1/i2c
 PFLAGS += -I%T/chips/atm128rfa1/spi
 PFLAGS += -I%T/chips/atm1281
 PFLAGS += -I%T/chips/atm1281/adc
-PFLAGS += -I%T/platforms/ucmini
 PFLAGS += -I%T/platforms/iris
 PFLAGS += -I%T/platforms/mica
 PFLAGS += -I%T/chips/atm128
