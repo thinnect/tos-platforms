@@ -1,3 +1,4 @@
+PFLAGS += -I%T/platforms/murp
 PFLAGS += -I%T/platforms/denodeb
 PFLAGS += -I%T/platforms/denode
 PFLAGS += -I%T/platforms/denode/chips/at45db

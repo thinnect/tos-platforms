@@ -1,0 +1,31 @@
+#-*-Makefile-*- vim:syntax=make
+
+TARGET = denodeb_gsm
+
+PROGRAMMER ?= avrdude
+
+ifeq ($(PROGRAMMER),avrdude)
+    PROGRAMMER_PART ?= -pm256rfr2
+endif
+
+# 16 MHz
+AVR_FUSE_L ?= 0xff
+
+# OCDEN|JTAGEN|SPIEN|WDTON|EESAVE|BOOTSZ|BOOTRST
+#   1  |   0  |  0  |  1  |   1  |  00  |   0
+# No debugging, JTAG+SPI, no WDT, no EESAVE, 8K bootloader
+AVR_FUSE_H ?= 0x98
+
+# Brown-out at 2.4V
+AVR_FUSE_E ?= 0xf8
+
+CFLAGS += -DDEVICE_TYPE_IDENTIFICATOR=4
+CFLAGS += -DDEVICE_HARDWARE_VERSION=0x06
+MAIN_IMAGE_END_ADDRESS = 0x3e000
+
+$(call TOSMake_include_platform,denodeb)
+
+$(call TOSMake_include_make_platform,avr)
+
+denodeb_gsm: $(BUILD_DEPS)
+        @:
