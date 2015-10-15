@@ -1,0 +1,7 @@
+$(info avrplus.rules)
+
+ifdef COMBOIMAGE
+    INSTALL_SREC = $(TOSMAKE_BUILD_DIR)/$(COMBOIMAGE)
+endif
+
+$(info pisf $(PROGRAMMER_INSTALL_SREC_FLAGS))

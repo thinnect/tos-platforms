@@ -1,0 +1,3 @@
+$(info comboimage.extra)
+
+COMBOIMAGE ?= combo.ihex
