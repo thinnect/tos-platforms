@@ -1,6 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
 
-TARGET = murp
+TARGET = murp0
 
 PROGRAMMER ?= avrdude
 
@@ -28,5 +28,5 @@ $(call TOSMake_include_platform,murp)
 $(call TOSMake_include_make_platform,avr)
 $(call TOSMake_include_make_platform,avrplus)
 
-murp: $(BUILD_DEPS)
+murp0: $(BUILD_DEPS)
         @:
