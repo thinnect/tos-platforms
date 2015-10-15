@@ -1,0 +1,33 @@
+#-*-Makefile-*- vim:syntax=make
+
+ifeq ($(KANA),)
+    $(error KANA must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAM = kana
+
+ifeq ($(PROGRAMMER),avrdude)
+    PROGRAMMER_FLAGS = -cstk500v2 -P$(KANA) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
+    PROGRAMMER_INSTALL_SREC_FLAGS = -U flash:w:$(INSTALL_SREC):a
+    ifdef AVR_FUSE_H
+        PROGRAMMER_WRITE_FUSES += -U efuse:w:$(AVR_FUSE_E):m
+    endif
+    ifdef AVR_FUSE_H
+        PROGRAMMER_WRITE_FUSES += -U hfuse:w:$(AVR_FUSE_H):m
+    endif
+    ifdef AVR_FUSE_L
+        PROGRAMMER_WRITE_FUSES += -U lfuse:w:$(AVR_FUSE_L):m
+    endif
+    ifdef AVR_FUSE_LOCK
+        PROGRAMMER_WRITE_LOCKBITS = -U lock:w:$(AVR_FUSE_LOCK):m
+    endif
+    PROGRAMMER_INSTALL_BOOTLOADER_FLAGS = -D -U flash:w:$(BOOTLOADER_IMG):a
+endif
+
+program: FORCE
+	@echo "    installing $(PLATFORM) binary using kana"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_WRITE_FUSES) $(PROGRAMMER_INSTALL_SREC_FLAGS)
+
+program_bl: FORCE
+	@echo "    installing $(PLATFORM) bootloader using kana"
+	$(PROGRAMMER) $(PROGRAMMER_FLAGS) $(PROGRAMMER_INSTALL_BOOTLOADER_FLAGS) $(PROGRAMMER_WRITE_LOCKBITS)
