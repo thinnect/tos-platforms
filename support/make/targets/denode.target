@@ -26,6 +26,7 @@ MAIN_IMAGE_END_ADDRESS = 0x1e000
 $(call TOSMake_include_platform,denode)
 
 $(call TOSMake_include_make_platform,avr)
+$(call TOSMake_include_make_platform,avrplus)
 
 denode: $(BUILD_DEPS)
         @:
