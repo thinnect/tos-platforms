@@ -1,4 +1,4 @@
-/**                                                                     
+/**
  *  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.  By
  *  downloading, copying, installing or using the software you agree to
  *  this license.  If you do not agree to this license, do not download,
@@ -6,7 +6,7 @@
  *
  *  Copyright (c) 2004-2005 Crossbow Technology, Inc.
  *  Copyright (c) 2002-2003 Intel Corporation.
- *  Copyright (c) 2000-2003 The Regents of the University  of California.    
+ *  Copyright (c) 2000-2003 The Regents of the University  of California.
  *  All rights reserved.
  *
  *  Permission to use, copy, modify, and distribute this software and its
@@ -51,13 +51,13 @@
 #define PLATFORM_MHZ 16
 #endif
 
-// enum so components can override power saving, 
-// as per TEP 112. 
-enum { 
-	TOS_SLEEP_NONE = ATM128_POWER_IDLE, 
-}; 
- 
-#ifndef PLATFORM_BAUDRATE 
+// enum so components can override power saving,
+// as per TEP 112.
+enum {
+	TOS_SLEEP_NONE = ATM128_POWER_IDLE,
+};
+
+#ifndef PLATFORM_BAUDRATE
 #define PLATFORM_BAUDRATE 115200L
 #endif
 
