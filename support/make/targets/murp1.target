@@ -3,10 +3,7 @@
 TARGET = murp1
 
 PROGRAMMER ?= avrdude
-
-ifeq ($(PROGRAMMER),avrdude)
-    PROGRAMMER_PART ?= -pm256rfr2
-endif
+PROGRAMMER_PART ?= -pm256rfr2
 
 # 16 MHz
 AVR_FUSE_L ?= 0xff
