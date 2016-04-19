@@ -1,0 +1,10 @@
+#-*-Makefile-*- vim:syntax=make
+$(info scp.extra)
+
+ifeq ($(SCP),)
+    $(error Host must be defined, try "make $(TARGETS) help")
+endif
+
+PROGRAMMER = avrdude-scp
+
+PROGRAMMER_EXTRA_FLAGS += -P$(SCP)
