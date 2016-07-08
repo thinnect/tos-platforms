@@ -23,7 +23,7 @@ implementation {
 	components HplAtm128GeneralIOC as GeneralIOC;
 	PIR.InterruptPin -> GeneralIOC.PortB4;
 
-    components AtmegaPinChange0C;
-    PIR.Interrupt -> AtmegaPinChange0C.GpioInterrupt[4];
+	components AtmegaPinChange0C;
+	PIR.Interrupt -> AtmegaPinChange0C.GpioInterrupt[4];
 
 }
