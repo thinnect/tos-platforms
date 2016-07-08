@@ -14,7 +14,7 @@ configuration PlatformPirC {
 }
 implementation {
 
-	components new RetriggeringPirC(FALSE, TRUE, 2000UL, 2000UL) as PIR;
+	components new RetriggeringPirC(FALSE, TRUE, 5000UL, 5000UL) as PIR;
 	Read = PIR.Read;
 	MovementStart = PIR.MovementStart;
 	MovementActive = PIR.MovementActive;
