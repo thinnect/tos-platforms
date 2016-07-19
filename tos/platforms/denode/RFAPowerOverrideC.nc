@@ -1,3 +1,7 @@
+/**
+ * @author Raido Pahtma
+ * @license MIT
+ */
 configuration RFAPowerOverrideC {
 
 }

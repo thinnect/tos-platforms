@@ -2,6 +2,7 @@
  * Internal flash parameters for the denodeb platform with Atmega256RFR2.
  *
  * @author Raido Pahtma
+ * @license MIT
  */
 #ifndef INTERNALFLASH_H_
 #define INTERNALFLASH_H_

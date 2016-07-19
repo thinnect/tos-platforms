@@ -33,14 +33,10 @@
  */
 
 #include "Timer.h"
-
-configuration LocalTimeMicroC
-{
+configuration LocalTimeMicroC {
 	provides interface LocalTime<TMicro>;
 }
-
-implementation
-{
+implementation {
 	components SimLocalTimeAlarmMicro32P;
 	LocalTime = SimLocalTimeAlarmMicro32P;
 }

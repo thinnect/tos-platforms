@@ -32,16 +32,13 @@
  * @author Andres Vahter <andres.vahter@defendec.com>
  */
 
-
 module SimLocalTimeAlarmMicro32P {
     provides {
         interface Alarm<TMicro, uint32_t>;
         interface LocalTime<TMicro>;
     }
 }
-
 implementation {
-
 
     sim_event_t* m_timer_event;
     bool m_running = FALSE;

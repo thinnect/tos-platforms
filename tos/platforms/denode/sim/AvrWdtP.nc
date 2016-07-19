@@ -1,9 +1,13 @@
+/**
+ * @author Raido Pahtma
+ * @license MIT
+ */
+
 module AvrWdtP {
 	provides interface Init;
 	uses interface Timer<TMilli>;
 }
-implementation
-{
+implementation {
 
 	uint16_t m_wdt = 0;
 

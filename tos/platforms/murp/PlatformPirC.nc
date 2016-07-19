@@ -2,7 +2,7 @@
  * The most common PIR wiring for MURP module based motion detectors.
  *
  * @author Raido Pahtma
- * @license Thinnect
+ * @license MIT
  */
 configuration PlatformPirC {
 	provides {

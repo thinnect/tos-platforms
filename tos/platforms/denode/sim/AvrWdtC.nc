@@ -1,6 +1,9 @@
-configuration AvrWdtC {
+/**
+ * @author Raido Pahtma
+ * @license MIT
+ */
 
-}
+configuration AvrWdtC { }
 implementation {
 
 	components AvrWdtP;

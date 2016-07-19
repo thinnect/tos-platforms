@@ -32,12 +32,10 @@
  * @author Andres Vahter <andres.vahter@defendec.com>
  */
 
-generic configuration AlarmMicro32C()
-{
+generic configuration AlarmMicro32C() {
     provides interface Alarm<TMicro, uint32_t>;
 }
-implementation
-{
+implementation {
     components SimLocalTimeAlarmMicro32P;
 
     Alarm = SimLocalTimeAlarmMicro32P;

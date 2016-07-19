@@ -1,3 +1,7 @@
+/**
+ * @author Raido Pahtma
+ * @license MIT
+ */
 #ifndef _AVR_WDT_H_
 #define _AVR_WDT_H_
 

@@ -1,6 +1,6 @@
 /**
  * @author Raido Pahtma
- * @license Thinnect
+ * @license MIT
  */
 #include "IeeeEui64.h"
 configuration LocalIeeeEui64C {
