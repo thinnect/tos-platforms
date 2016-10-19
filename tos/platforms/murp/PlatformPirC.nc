@@ -14,6 +14,8 @@ configuration PlatformPirC {
 }
 implementation {
 
+	#warning MURP_PIR
+
 	components new RetriggeringPirC(FALSE, TRUE, 5000UL, 5000UL) as PIR;
 	Read = PIR.Read;
 	MovementStart = PIR.MovementStart;
@@ -22,6 +24,9 @@ implementation {
 
 	components HplAtm128GeneralIOC as GeneralIOC;
 	PIR.InterruptPin -> GeneralIOC.PortD3;
+
+	components new DummyGeneralIOC();
+	PIR.PowerPin -> DummyGeneralIOC;
 
 	components AtmegaExtInterruptC as Interrupts;
 	PIR.Interrupt -> Interrupts.GpioInterrupt[3];

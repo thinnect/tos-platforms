@@ -2,7 +2,7 @@
  * The most common PIR wiring for denode based motion detectors.
  *
  * @author Raido Pahtma
- * @license Thinnect
+ * @license MIT
  */
 configuration PlatformPirC {
 	provides {
@@ -14,6 +14,8 @@ configuration PlatformPirC {
 }
 implementation {
 
+	#warning denode PIR
+
 	components new RetriggeringPirC(FALSE, TRUE, 2000UL, 2000UL) as PIR;
 	Read = PIR.Read;
 	MovementStart = PIR.MovementStart;
@@ -23,7 +25,10 @@ implementation {
 	components HplAtm128GeneralIOC as GeneralIOC;
 	PIR.InterruptPin -> GeneralIOC.PortB4;
 
-	components AtmegaPinChange0C;
-	PIR.Interrupt -> AtmegaPinChange0C.GpioInterrupt[4];
+	components new DummyGeneralIOC();
+	PIR.PowerPin -> DummyGeneralIOC;
+
+	components AtmegaPinChange0C as Interrupts;
+	PIR.Interrupt -> Interrupts.GpioInterrupt[4];
 
 }
