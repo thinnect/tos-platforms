@@ -8,6 +8,7 @@ module AvrWdtP {
 }
 implementation {
 
+	bool m_enabled = FALSE;
 	uint16_t m_wdt = 0;
 
 	const char* labels[] = {
@@ -46,14 +47,18 @@ implementation {
 
 	void wdt_reset() @C()
 	{
-		dbg("avrwdt", "avrwdt: wdt_reset %s\n", labels[m_wdt]);
-		call Timer.startOneShot(timeouts[m_wdt]);
+		if(m_enabled)
+		{
+			dbg("avrwdt", "avrwdt: wdt_reset %s\n", labels[m_wdt]);
+			call Timer.startOneShot(timeouts[m_wdt]);
+		}
 	}
 
 	void wdt_enable(uint16_t t) @C()
 	{
 		if(t <= 9)
 		{
+			m_enabled = TRUE;
 			m_wdt = t;
 			dbg("avrwdt", "avrwdt: wdt_enable(%s)\n", labels[t]);
 			wdt_reset();
@@ -64,6 +69,7 @@ implementation {
 	void wdt_disable() @C()
 	{
 		dbg("avrwdt", "avrwdt: wdt_disable()\n");
+		m_enabled = FALSE;
 		call Timer.stop();
 	}
 
