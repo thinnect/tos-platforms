@@ -22,6 +22,7 @@ configuration PlatformActiveMessageC {
 		interface PacketField<uint8_t> as PacketLinkQuality;
 		interface PacketField<uint8_t> as PacketTransmitPower;
 		interface PacketField<uint8_t> as PacketRSSI;
+		interface PacketField<int8_t> as PacketSignalStrength; // dBm
 		interface LinkPacketMetadata;
 
 		interface LocalTime<TRadio> as LocalTimeRadio;
@@ -51,6 +52,10 @@ implementation {
 	PacketTransmitPower = PlatformAM.PacketTransmitPower;
 	PacketRSSI = PlatformAM.PacketRSSI;
 	LinkPacketMetadata = PlatformAM;
+
+	components PacketSignalStrengthC;
+	PacketSignalStrength = PacketSignalStrengthC.PacketSignalStrength;
+	PacketSignalStrengthC.PacketRSSI -> PlatformAM.PacketRSSI;
 
 	LocalTimeRadio = PlatformAM;
 	PacketTimeStampMilli = PlatformAM;
