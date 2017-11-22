@@ -1,0 +1,7 @@
+#-*-Makefile-*- vim:syntax=make
+PLATFORM = efm32
+
+$(call TOSMake_include_platform,efm32)
+
+efm32: $(BUILD_DEPS)
+	@:

@@ -1,0 +1,44 @@
+#-*-Makefile-*- vim:syntax=make
+
+PFLAGS += -DEFR32MG12P332F1024GL125
+
+PFLAGS += -I%T/platforms/efm32
+PFLAGS += -I%T/platforms/efm32/radio/rail_lib/common
+PFLAGS += -I%T/platforms/efm32/radio/rail_lib/chip/efr32
+PFLAGS += -I%T/platforms/efm32/radio/rail_lib/chip/efr32/rf
+PFLAGS += -I%T/platforms/efm32/radio/rail_lib/hal
+PFLAGS += -I%T/platforms/efm32/radio/rail_lib/hal/efr32
+PFLAGS += -I%T/platforms/efm32/radio/rail_lib/protocol/ieee802154
+
+PFLAGS += -I%T/chips/cortex/m4
+PFLAGS += -I%T/chips/cortex/m4/silabs/
+PFLAGS += -I%T/chips/cortex/m4/silabs/timer
+PFLAGS += -I%T/chips/cortex/m4/silabs/pins
+PFLAGS += -I%T/chips/cortex/m4/silabs/cmsis
+PFLAGS += -I%T/chips/cortex/m4/silabs/cmsis_os
+PFLAGS += -I%T/chips/cortex/m4/silabs/emlib/inc
+PFLAGS += -I%T/chips/cortex/m4/silabs/EFR32MG12P/Include
+PFLAGS += -I/home/kobi/git/sniffer/
+PFLAGS += -I/home/kobi/git/sniffer/hdlc/
+
+
+
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/printf
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+PFLAGS += -I%T/lib/rfxlink/layers
+PFLAGS += -I%T/lib/rfxlink/util
+PFLAGS += -I%T/lib/diagmsg
+
+
+PFLAGS += -gcc=/opt/gcc-arm-none-eabi-4_9-2015q3/bin/arm-none-eabi-gcc 
+PFLAGS += -mcpu=cortex-m3 -mthumb
+PFLAGS += --specs=nano.specs
+PFLAGS += -nostartfiles
+PFLAGS += -fnesc-target=env
+PFLAGS += -fnesc-no-debug
+PFLAGS += -fnesc-scheduler=TinySchedulerC,TinySchedulerC.TaskBasic,TaskBasic,TaskBasic,runTask,postTask
+
+export NESC_MACHINE = structure_size_boundary=32, pointer=4,4 float=4,4 double=8,4 long_double=8,4 short=2,2 int=4,4 long=4,4 long_long=8,4 int1248_align=1,2,4,4 wchar_size_size=4,4 char_wchar_signed=false,true
+
