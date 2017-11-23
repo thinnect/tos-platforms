@@ -40,6 +40,7 @@
  *
  */
 
+#include "main.h"
 #include "hdlc_lib.h"
 #include <Serial.h>
 // generic module SerialActiveMessageP () {
@@ -69,9 +70,10 @@ implementation {
   message_t g_msg;
   message_t *g_msg_copy = &g_msg;
 
+
   void* getPayload(message_t* msg)
   {
-    return ((void*)msg) + sizeof(message_header_t);//call RadioPacket.headerLength(msg);
+    return ((void*)msg) + sizeof(message_header_t);
   }
 
 
@@ -80,12 +82,14 @@ implementation {
     g_msg_copy = signal SubReceive.receive(g_msg_copy, payload, 15);
   }
 
+
   task void sentTask() {
     signal SubSend.sendDone(msgCopy, SUCCESS);
   }
 
 
   void hdlc_sent() @C() @spontaneous() {
+    warn1("sntDone");
     post sentTask();
   }
 
@@ -93,23 +97,17 @@ implementation {
   void hdlcSerial_rcvd(uint8_t *txData, uint8_t payloadLen) @C() @spontaneous() {
     uint8_t i = 0;
 
-    // warn1("HDLC received, len = %u", txData[0]);
-
     for (i = 0; i < sizeof(message_header_t); i++) {
       g_msg_copy->header[i] = txData[i+1];
-      // debug1("[%u]=0x%x", i, g_msg_copy->header[i]);
     }
-
-    // warn1("payloadLen=%u", payloadLen);
 
     for (i = 0; i < payloadLen; i++) {
       g_msg_copy->data[i] = txData[12+i];
-      // debug1("[%u]=0x%x", i+11, g_msg_copy->data[i]);
     }
     
     post rcvdTask();
-
   }
+
 
   serial_header_t* ONE getHeader(message_t* ONE msg) {
     return TCAST(serial_header_t* ONE, (uint8_t*)msg + offsetof(message_t, data) - sizeof(serial_header_t));
@@ -124,7 +122,8 @@ implementation {
 					  uint8_t len) {
     uint8_t i = 0;
     uint8_t j = 0;
-    uint8_t toUart[100] = {0};
+    uint8_t status = 0;
+    uint8_t toUart[150];
 
     serial_header_t* header = getHeader(msg);
 
@@ -141,10 +140,16 @@ implementation {
     header->type = id;
     header->length = len;
 
+    // if (uartTx == true) {
+    //   warn1("uartTx EBUSY");
+    //   return FAIL;
+    // }
+
     for (i = 12; i < 12+len; i++) {
       toUart[i] = msg->data[j];
       j++;
     }
+    toUart[1] = len + 12;
     toUart[7] = msg->header[4]; //AM_DESTINATION_HI_POS
     toUart[6] = msg->header[5]; //AM_DESTINATION_LOW_POS
     toUart[9] = msg->header[6]; //AM_SOURCE_HI_POS
@@ -155,9 +160,14 @@ implementation {
 
     msgCopy = msg;
 
-    debugb1("rcv %04X->%04X", msg, len+sizeof(message_header_t), call AMPacket.source(msg), call AMPacket.destination(msg));
-    hdlc_encode(toUart, len+12, 0x45);
-    
+    debugb1("rcv %04X->%04X", toUart, len+sizeof(message_header_t), call AMPacket.source(msg), call AMPacket.destination(msg));
+    // hdlc_encode(toUart, len+12, 0x45);
+
+    status = osMessageQueuePut(queueHandle, toUart, 0, 0);
+
+    if (status != 0) {
+      warn1("osStatus_t = %u", status);
+    }
 
     return SUCCESS;//call SubSend.send(msg, len);
   }
