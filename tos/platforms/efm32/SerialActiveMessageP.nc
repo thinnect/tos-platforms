@@ -95,16 +95,10 @@ implementation {
 
 
   void hdlcSerial_rcvd(uint8_t *txData, uint8_t payloadLen) @C() @spontaneous() {
-    uint8_t i = 0;
 
-    for (i = 0; i < sizeof(message_header_t); i++) {
-      g_msg_copy->header[i] = txData[i+1];
-    }
+    memcpy(g_msg_copy->header, txData+1, sizeof(message_header_t));
+    memcpy(g_msg_copy->data, txData+12, payloadLen);
 
-    for (i = 0; i < payloadLen; i++) {
-      g_msg_copy->data[i] = txData[12+i];
-    }
-    
     post rcvdTask();
   }
 
@@ -120,8 +114,6 @@ implementation {
   command error_t AMSend.send[am_id_t id](am_addr_t dest,
 					  message_t* msg,
 					  uint8_t len) {
-    uint8_t i = 0;
-    uint8_t j = 0;
     uint8_t status = 0;
     uint8_t toUart[150];
 
@@ -140,15 +132,7 @@ implementation {
     header->type = id;
     header->length = len;
 
-    // if (uartTx == true) {
-    //   warn1("uartTx EBUSY");
-    //   return FAIL;
-    // }
-
-    for (i = 12; i < 12+len; i++) {
-      toUart[i] = msg->data[j];
-      j++;
-    }
+    memcpy(toUart+12, msg->data, len);
     toUart[1] = len + 12;
     toUart[7] = msg->header[4]; //AM_DESTINATION_HI_POS
     toUart[6] = msg->header[5]; //AM_DESTINATION_LOW_POS
@@ -161,7 +145,6 @@ implementation {
     msgCopy = msg;
 
     debugb1("rcv %04X->%04X", toUart, len+sizeof(message_header_t), call AMPacket.source(msg), call AMPacket.destination(msg));
-    // hdlc_encode(toUart, len+12, 0x45);
 
     status = osMessageQueuePut(queueHandle, toUart, 0, 0);
 
