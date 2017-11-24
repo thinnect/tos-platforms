@@ -253,7 +253,7 @@ implementation
 			}
 			getHeader(g_msg_copy)->length = rxPacketInfo.packetBytes - 12;
 
-			call PacketTimeStamp.set(g_msg_copy, call Counter.get());
+			call PacketTimeStamp.set(g_msg_copy, call Counter.get() / 16);
 			call PacketRSSI.set(g_msg_copy, appendedInfo.rssi);
 			call PacketLinkQuality.set(g_msg_copy, appendedInfo.lqi);
 			
@@ -322,13 +322,15 @@ implementation
 				msgTimestamp = (msg->data[offset] << 24) | (msg->data[offset+1] << 16) | 
 								(msg->data[offset+2] << 8) | (msg->data[offset+3]);
 				
-				txTimestamp = msgTimestamp - call Counter.get();
+				txTimestamp = msgTimestamp - call Counter.get() / 16;
+				debug1("msgTimestamp=%u", msgTimestamp);
+				debug1("call Counter.get()=%u", call Counter.get() / 16);
 				msg->data[offset] = txTimestamp >> 24;
 				msg->data[offset+1] = txTimestamp >> 16;
 				msg->data[offset+2] = txTimestamp >> 8;
 				msg->data[offset+3] = txTimestamp;
 
-				call PacketTimeStamp.set(msg, call Counter.get());
+				call PacketTimeStamp.set(msg, call Counter.get() / 16);
 			}
 		}
 

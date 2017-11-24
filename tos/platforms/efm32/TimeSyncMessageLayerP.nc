@@ -200,7 +200,7 @@ implementation
 
 	command error_t TimeSyncAMSendMilli.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len, uint32_t event_time)
 	{
-		event_time = ((int32_t)(event_time - call LocalTimeMilli.get()) * 1000) + call LocalTimeRadio.get();
+		event_time = ((int32_t)(event_time - call LocalTimeMilli.get()) * 61) + call LocalTimeRadio.get() / 16;
 		return call TimeSyncAMSendRadio.send[id](addr, msg, len, event_time);
 	}
 
@@ -277,6 +277,8 @@ implementation
 
 	command uint32_t TimeSyncPacketMilli.eventTime(message_t* msg)
 	{
-		return ((int32_t)(getFooter(msg)->timestamp.relative / 1000) + call PacketTimeStampMilli.timestamp(msg));
+		warn1("(int32_t)(getFooter(msg)->timestamp.relative / 61)=%i", (int32_t)(getFooter(msg)->timestamp.relative / 61));
+		//warn1("PacketTimeStampMilli.timestamp(msg)=%i", call PacketTimeStampMilli.timestamp(msg));
+		return ((int32_t)(getFooter(msg)->timestamp.relative / 61) + call PacketTimeStampMilli.timestamp(msg));
 	}
 }

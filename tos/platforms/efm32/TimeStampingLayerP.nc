@@ -57,6 +57,11 @@ generic module TimeStampingLayerP()
 
 implementation
 {
+
+	#define __MODUUL__ "TimeStamp"
+	#define __LOG_LEVEL__ ( LOG_LEVEL_TimeStampingP & BASE_LOG_LEVEL )
+	#include "log.h"
+
 	timestamp_metadata_t* getMeta(message_t* msg)
 	{
 		return ((void*)msg) + sizeof(message_t) - call RadioPacket.metadataLength(msg);
@@ -97,9 +102,12 @@ implementation
 
 	async command uint32_t PacketTimeStampMilli.timestamp(message_t* msg)
 	{
-		int32_t offset = call PacketTimeStampRadio.timestamp(msg) - call LocalTimeRadio.get();
+		int32_t offset = call PacketTimeStampRadio.timestamp(msg) - call LocalTimeRadio.get() / 16;
+		err1("call PacketTimeStampRadio.timestamp(msg)=%u", call PacketTimeStampRadio.timestamp(msg));
+		err1("call LocalTimeRadio.get()=%u", call LocalTimeRadio.get() / 16);
+		err1("call LocalTimeMilli.get()=%u", call LocalTimeMilli.get());
 
-		return (offset / 1000) + call LocalTimeMilli.get();
+		return (offset / 61) + call LocalTimeMilli.get();
 	}
 
 	async command void PacketTimeStampMilli.clear(message_t* msg)
@@ -109,7 +117,11 @@ implementation
 
 	async command void PacketTimeStampMilli.set(message_t* msg, uint32_t value)
 	{
-		int32_t offset = (value - call LocalTimeMilli.get()) * 1000;
+
+		int32_t offset = (value - call LocalTimeMilli.get()) * 61;
+
+		debug1("offset=%i", offset);
+		debug1("call LocalTimeRadio.get()=%u", call LocalTimeRadio.get());
 
 		call PacketTimeStampRadio.set(msg, offset + call LocalTimeRadio.get());
 	}
