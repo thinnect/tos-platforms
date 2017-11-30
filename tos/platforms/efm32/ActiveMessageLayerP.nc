@@ -323,8 +323,8 @@ implementation
 								(msg->data[offset+2] << 8) | (msg->data[offset+3]);
 				
 				txTimestamp = msgTimestamp - call Counter.get() / 16;
-				debug1("msgTimestamp=%u", msgTimestamp);
-				debug1("call Counter.get()=%u", call Counter.get() / 16);
+				// debug1("msgTimestamp=%u", msgTimestamp);
+				// debug1("call Counter.get()=%u", call Counter.get() / 16);
 				msg->data[offset] = txTimestamp >> 24;
 				msg->data[offset+1] = txTimestamp >> 16;
 				msg->data[offset+2] = txTimestamp >> 8;

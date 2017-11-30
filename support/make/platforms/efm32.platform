@@ -31,6 +31,7 @@ PFLAGS += -I%T/lib/rfxlink/layers
 PFLAGS += -I%T/lib/rfxlink/util
 PFLAGS += -I%T/lib/diagmsg
 
+PFLAGS += -DIDENT_BOARDNAME=\"$(TARGET)\"
 
 PFLAGS += -gcc=/opt/gcc-arm-none-eabi-4_9-2015q3/bin/arm-none-eabi-gcc 
 PFLAGS += -mcpu=cortex-m3 -mthumb

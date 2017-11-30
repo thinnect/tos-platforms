@@ -132,8 +132,11 @@ implementation {
     header->type = id;
     header->length = len;
 
+    warn1("id=%u", id);
+
     memcpy(toUart+12, msg->data, len);
     toUart[1] = len + 12;
+    toUart[2] = 0x00; // DISPATCHER_BYTE
     toUart[7] = msg->header[4]; //AM_DESTINATION_HI_POS
     toUart[6] = msg->header[5]; //AM_DESTINATION_LOW_POS
     toUart[9] = msg->header[6]; //AM_SOURCE_HI_POS
@@ -144,7 +147,7 @@ implementation {
 
     msgCopy = msg;
 
-    debugb1("rcv %04X->%04X", toUart, len+sizeof(message_header_t), call AMPacket.source(msg), call AMPacket.destination(msg));
+    // debugb1("rcv %04X->%04X", toUart, len+sizeof(message_header_t), call AMPacket.source(msg), call AMPacket.destination(msg));
 
     status = osMessageQueuePut(queueHandle, toUart, 0, 0);
 
