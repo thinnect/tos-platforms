@@ -133,7 +133,6 @@ implementation {
 
 
   void hdlc_sent_device() @C() @spontaneous() {
-    warn1("sntDone device");
     post sentTask();
   }
 
@@ -141,8 +140,6 @@ implementation {
   task void rcvdTask()
   {
     void* payload = getPayload(g_msg_copy);
-    // warn1("rcvdTask");
-    debugb1("rcv: ", payload, payloadLen);
     g_msg_copy = signal Receive.receive[id](g_msg_copy, payload, payloadLen);
   }
 
@@ -151,13 +148,9 @@ implementation {
   { 
     uint8_t i = 0;
 
-    warn1("length=%u", length);
-
-    payloadLen = length - 1;
+    payloadLen = length - 3;
     id = devData[0];
-    for (i=0; i < length; i++) {
-      g_msg_copy->data[i] = devData[i+1];
-    }
+    memcpy(g_msg_copy->data, devData+1, length);
 
     post rcvdTask();
   }
@@ -174,13 +167,8 @@ implementation {
     toUart[2] = id; // DISPATCHER_BYTE
 
     memcpy(toUart+3, msg, len);
-
-    debugb1("msg: ", msg, len);
-
     sendId = id;
-
     msgCopy = msg;
-
     status = osMessageQueuePut(queueHandle, toUart, 0, 0);
 
     if (status != 0) {

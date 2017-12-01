@@ -21,8 +21,6 @@ PFLAGS += -I%T/chips/cortex/m4/silabs/EFR32MG12P/Include
 PFLAGS += -I/home/kobi/git/sniffer/
 PFLAGS += -I/home/kobi/git/sniffer/hdlc/
 
-
-
 PFLAGS += -I%T/lib/timer
 PFLAGS += -I%T/lib/printf
 PFLAGS += -I%T/lib/serial
@@ -32,6 +30,12 @@ PFLAGS += -I%T/lib/rfxlink/util
 PFLAGS += -I%T/lib/diagmsg
 
 PFLAGS += -DIDENT_BOARDNAME=\"$(TARGET)\"
+
+ifdef RADIO_CHANNEL
+    $(info RADIO_CHANNEL=$(RADIO_CHANNEL))
+    PFLAGS += -DDEFAULT_RADIO_CHANNEL=$(RADIO_CHANNEL)
+    PFLAGS += -DSILABS_DEF_CHANNEL=$(RADIO_CHANNEL)
+endif
 
 PFLAGS += -gcc=/opt/gcc-arm-none-eabi-4_9-2015q3/bin/arm-none-eabi-gcc 
 PFLAGS += -mcpu=cortex-m3 -mthumb

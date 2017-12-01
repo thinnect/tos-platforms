@@ -89,7 +89,7 @@ implementation {
 
 
   void hdlc_sent() @C() @spontaneous() {
-    warn1("sntDone");
+    // warn1("sntDone");
     post sentTask();
   }
 
@@ -132,7 +132,7 @@ implementation {
     header->type = id;
     header->length = len;
 
-    warn1("id=%u", id);
+    // warn1("id=%u", id);
 
     memcpy(toUart+12, msg->data, len);
     toUart[1] = len + 12;

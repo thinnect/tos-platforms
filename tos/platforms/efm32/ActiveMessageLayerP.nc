@@ -78,7 +78,6 @@ module ActiveMessageLayerP
 		interface Alarm<TRadio, uint32_t>;
 		interface UniqueConfig;
 		interface Ieee154Packet;
-		// interface Ieee154PacketLayer;
 		interface RadioPacket as SubPacket;
 		interface BareSend as SubSend;
 		interface BareReceive as SubReceive;
@@ -105,6 +104,7 @@ implementation
 	uint8_t busy = 0;
 	uint8_t sntStatus = 0;
 	uint8_t needAck = 0;
+	uint8_t channel = SILABS_DEF_CHANNEL;
 
 	uint8_t txData[114] = {0};
 
@@ -343,7 +343,7 @@ implementation
 		msgCopy = msg;
 		signal SendNotifier.aboutToSend[id](addr, msg); //msgCopy
 
-		if (RAIL_StartCcaCsmaTx(railHandle, 12, 0, &csmaConf, NULL)) { //&RAIL_CcaCsma, &csmaConf
+		if (RAIL_StartCcaCsmaTx(railHandle, channel, 0, &csmaConf, NULL)) { //&RAIL_CcaCsma, &csmaConf
 			warn1("snt fail");
 			return FAIL;
 		}
@@ -654,49 +654,40 @@ implementation
 	}
 
 	  /*----------------- CHANNEL -----------------*/
+    tasklet_async command uint8_t RadioState.getChannel()
+  	{	  
+		return channel;
+	}
 
-  tasklet_async command uint8_t RadioState.getChannel()
-  {
-  	// debug1("lol1");
-  	#warning "Empty getChannel()"
-    return 1;
-  }
+	tasklet_async command error_t RadioState.setChannel(uint8_t c)
+	{
+		channel = c;
+		signal RadioState.done();
+		return SUCCESS;
+	}
 
-  tasklet_async command error_t RadioState.setChannel(uint8_t c)
-  {
-  	// debug1("lol2");
-  	#warning "Empty setChannel()"
-    return SUCCESS;
-  }
+	tasklet_async command error_t RadioState.turnOff()
+	{
+		RAIL_Idle(railHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, false);
+		signal RadioState.done();
+		return SUCCESS;
+	}
 
-  tasklet_async command error_t RadioState.turnOff()
-  {
-  	// debug1("lol3");
-  	#warning "Empty turnOff()"
- 	RAIL_Idle(railHandle, RAIL_IDLE_FORCE_SHUTDOWN_CLEAR_FLAGS, false);
-    return SUCCESS;
-  }
+	tasklet_async command error_t RadioState.standby()
+	{
+		#warning "Empty standby()"
+		return SUCCESS;
+	}
 
-  tasklet_async command error_t RadioState.standby()
-  {
-  	// debug1("lol4");
-  	#warning "Empty standby()"
-    return SUCCESS;
-  }
+	tasklet_async command error_t RadioState.turnOn()
+	{
+		RAIL_Idle(railHandle, RAIL_IDLE, true);
+		RAIL_StartRx(railHandle, channel, NULL);
+		signal RadioState.done();
+		return SUCCESS;
+	}
 
-  tasklet_async command error_t RadioState.turnOn()
-  {
-  	//debug1("lol5");
-  	// #warning "Empty turnOn()"
-  	// signal RadioState.done();
-  	RAIL_Idle(railHandle, RAIL_IDLE, true);
-  	RAIL_StartRx(railHandle, 12, NULL);
-    return EALREADY;
-  }
-
-  //default tasklet_async event void RadioSend.ready() { }
-
-  default tasklet_async event void RadioState.done() { }
+	default tasklet_async event void RadioState.done() { }
 
 
     async command error_t PacketAcknowledgements.requestAck(message_t* msg)

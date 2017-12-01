@@ -170,25 +170,25 @@ implementation
 	components new MessageBufferLayerC();
 	MessageBufferLayerC.RadioSend -> CollisionAvoidanceLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
+	// MessageBufferLayerC.RadioState -> ActiveMessageLayerP;
 	MessageBufferLayerC.Tasklet -> TaskletC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	RadioChannel = MessageBufferLayerC;
+	// RadioChannel = ActiveMessageLayerP;
 
 	components new LowPowerListeningDummyC() as LowPowerListeningLayerC;
 	LowPowerListeningLayerC.SubControl -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubSend -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubReceive -> MessageBufferLayerC;
 	LowPowerListeningLayerC.SubPacket -> TimeStampingLayerC;
+	// SplitControl -> ActiveMessageLayerP.RadioState;
 	SplitControl = LowPowerListeningLayerC;
 	LowPowerListening = LowPowerListeningLayerC;
 
-	// LowPowerListeningLayerC.SubPacket -> TimeStampingLayerC;
-
-	// components new DummyLayerC() as TrafficMonitorLayerC;
 	components new TrafficMonitorLayerC();
 	TrafficMonitorLayerC.Config -> RadioP;
 	TrafficMonitorLayerC -> RadioDriverDebugLayerC.RadioSend;
-	// TrafficMonitorLayerC -> ActiveMessageLayerP.RadioReceive;
+	// TrafficMonitorLayerC -> ActiveMessageLayerP.RadioState;
 	TrafficMonitorLayerC -> RadioDriverDebugLayerC.RadioState;
 
 	components new DummyLayerC() as CsmaLayerC;
@@ -198,7 +198,6 @@ implementation
 
 	components new DummyLayerC() as RadioDriverDebugLayerC;
 	RadioDriverDebugLayerC.SubState -> ActiveMessageLayerP;
-	// RadioDriverDebugLayerC.SubSend -> ActiveMessageLayerP;
 
 	components new SoftwareAckLayerC();
 	ActiveMessageLayerP.AckReceivedFlag -> MetadataFlagsLayerC.PacketFlag[unique("UQ_METADATA_FLAGS")];
@@ -219,10 +218,6 @@ implementation
 	PacketTimeStampRadio = TimeStampingLayerC;
 	PacketTimeStampMilli = TimeStampingLayerC;
 	TimeStampingLayerC.SubPacket -> MetadataFlagsLayerC;
-
-	// components new MetadataFlagsLayerC();
-	// TimeStampingLayerC.TimeStampFlag -> MetadataFlagsLayerC.PacketFlag[unique("UQ_RFA1_METADATA_FLAGS")];
-	// MetadataFlagsLayerC.SubPacket -> ActiveMessageLayerP;
 	
 	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> PacketLinkLayerC;
@@ -238,9 +233,6 @@ implementation
 	PacketLinkQuality = ActiveMessageLayerP.PacketLinkQuality;
 	ActiveMessageLayerP.PacketTimeStamp -> TimeStampingLayerC;
 	ActiveMessageLayerP.Ieee154Packet -> Ieee154PacketLayerC;
-	
-	// Ieee154PacketLayerC.SubReceive -> PacketLinkLayerC;
-	// ActiveMessageLayerP.Ieee154PacketLayer -> Ieee154PacketLayerC;
 	RadioP.Ieee154PacketLayer -> Ieee154PacketLayerC;
 
 #if !defined(TFRAMES_ENABLED)
@@ -268,10 +260,6 @@ implementation
 	components new UniqueLayerC(RFA1_NEIGHBORHOOD_SIZE);
 	UniqueLayerC.Config -> RadioP.UniqueConfig;
 	UniqueLayerC.SubSend -> PacketLinkLayerC;
-	
-
-	
-	// UniqueLayerC.SubSend -> PacketLinkLayerC;
 
 	components new DummyLayerC() as AutoResourceAcquireLayerC;
 	AutoResourceAcquireLayerC -> TinyosNetworkLayerC.TinyosSend;
