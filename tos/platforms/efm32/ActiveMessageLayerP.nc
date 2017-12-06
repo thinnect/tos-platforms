@@ -46,6 +46,7 @@
 #include "rail_chip_specific.h"
 #include "rail_types.h"
 #include "main.h"
+#include "em_msc.h"
 
 // generic module ActiveMessageLayerP()
 module ActiveMessageLayerP
@@ -97,6 +98,9 @@ implementation
 	#define __LOG_LEVEL__ ( LOG_LEVEL_ActiveMessageP & BASE_LOG_LEVEL )
 	#include "log.h"
 
+	#define CHANNEL_ADDR	(0x0FE00004)
+	#define TOS_ID_ADDR		(0x0FE00000)
+
 	message_t *msgCopy;
 	uint8_t sequenceNumber = 0;
 	message_t g_msg;
@@ -104,7 +108,7 @@ implementation
 	uint8_t busy = 0;
 	uint8_t sntStatus = 0;
 	uint8_t needAck = 0;
-	uint8_t channel = SILABS_DEF_CHANNEL;
+	uint8_t channel = 0;
 
 	uint8_t txData[114] = {0};
 
@@ -655,13 +659,33 @@ implementation
 
 	  /*----------------- CHANNEL -----------------*/
     tasklet_async command uint8_t RadioState.getChannel()
-  	{	  
+  	{	
+  		channel = *(uint32_t *) CHANNEL_ADDR;
+  		if (channel == 0xFF) {
+			channel = DEFAULT_RADIO_CHANNEL;
+		}
 		return channel;
 	}
 
 	tasklet_async command error_t RadioState.setChannel(uint8_t c)
 	{
+		uint32_t *userDataPage = (uint32_t *) 0x0FE00000;
+		uint16_t tos_id = *(uint32_t *) TOS_ID_ADDR;
+		uint32_t writeData[] = {tos_id, c};
+		int8_t status = 0;
+
 		channel = c;
+		
+		status = MSC_ErasePage(userDataPage);
+		if (status != 0) {
+			err1("Unable to erase flash: %u", status);
+		}
+
+		status = MSC_WriteWord(userDataPage, writeData, sizeof(writeData));
+		if (status != 0) {
+			err1("Unable to write to flash: %u", status);
+		}
+		
 		signal RadioState.done();
 		return SUCCESS;
 	}
@@ -681,6 +705,13 @@ implementation
 
 	tasklet_async command error_t RadioState.turnOn()
 	{
+		channel = *(uint32_t *) CHANNEL_ADDR;
+		
+		if (channel == 0xFF) {
+			channel = DEFAULT_RADIO_CHANNEL;
+			warn1("DEFAULT_RADIO_CHANNEL = %u", channel);
+		}
+
 		RAIL_Idle(railHandle, RAIL_IDLE, true);
 		RAIL_StartRx(railHandle, channel, NULL);
 		signal RadioState.done();
