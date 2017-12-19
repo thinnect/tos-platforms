@@ -33,7 +33,12 @@ implementation
 		 */
 		//call IRQInit.init();
 		TOS_NODE_ID = *(uint32_t *)0x0FE00000;
-		debug1("TOS_NODE_ID=%u", TOS_NODE_ID);
+		if ((TOS_NODE_ID == 0xFFFF) || (TOS_NODE_ID == 0)) {
+			TOS_NODE_ID = 1;
+			warn1("DEFAULT TOS_NODE_ID = 1");
+		} else {
+			debug1("TOS_NODE_ID=%u", TOS_NODE_ID);
+		}
 		//call LedsInit.init();
 
 		return SUCCESS;
