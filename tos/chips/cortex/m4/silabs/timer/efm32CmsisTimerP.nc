@@ -84,6 +84,7 @@ implementation {
 		{
 			uint32_t now = 0;	
 			now = (uint32_t)osKernelGetTickCountISR();
+			// now = (uint32_t)osKernelGetTickCountISR() / 10;
 			return now;
 		}
 		
@@ -99,6 +100,7 @@ implementation {
 	}
 
 	async command void Alarm.start(uint32_t ndt) {
+		// atomic call Alarm.startAt((uint32_t)osKernelGetTickCountISR() / 10, ndt);
 		atomic call Alarm.startAt((uint32_t)osKernelGetTickCountISR(), ndt);
 	}
 
@@ -120,19 +122,33 @@ implementation {
 	async command void Alarm.startAt(uint32_t nt0, uint32_t ndt) {
 		atomic {
 			int32_t stat = 0;
-			uint32_t now = 0;	
+			uint32_t now = 0;
 			now = (uint32_t)osKernelGetTickCountISR();
+			// now = (uint32_t)osKernelGetTickCountISR() / 10;
 			t0 = nt0;
 			dt = ndt;
-			
+
 			if (nt0+ndt < now) {
 				ndt = 1;
 				debug1("nt0+ndt < now");
 			} else {
 				ndt = nt0 + ndt - now;
+				// ndt = ndt * 10;
 			}
-			
+
+			if (ndt == 0) {
+				ndt = 1;
+				warn1("ndt=0");
+			}
+
+			if (ndt > 100000) {
+				ndt = 100;
+				err1("NDT ERROR = %u", ndt);
+			}
+
+
 			stat = osTimerStartISR(oneShot_id, ndt);
+			// debug1("ndt: %u", ndt);
 
 			if (stat != 0) {
 				debug1("failed start stat = %i", stat);
@@ -147,7 +163,7 @@ implementation {
 	async command uint32_t Alarm.getAlarm() {
 		
 		atomic {
-			debug1("getAlarm=%u, %u", t0+dt, (uint32_t)osKernelGetTickCountISR());	
+			// debug1("getAlarm=%u, %u", t0+dt, (uint32_t)osKernelGetTickCountISR());	
 			return t0 + dt;
 		}
 	}

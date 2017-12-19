@@ -108,14 +108,15 @@ implementation
 	uint8_t busy = 0;
 	uint8_t sntStatus = 0;
 	uint8_t needAck = 0;
-	uint8_t channel = 0;
+	uint8_t channel = 14;
 
-	uint8_t txData[114] = {0};
+	uint8_t txData[256] = {0};
 
 	task void sntTask() 
 	{
 		if (msgCopy != NULL) {
 			if (sntStatus == 1) {
+				warn1("snt");
 				signal SubSend.sendDone(msgCopy, SUCCESS);
 			} else if (sntStatus == 2){
 				err1("EBUSY SNT DONE");
@@ -134,6 +135,8 @@ implementation
 	void packetSent(uint8_t status) @C() @spontaneous()
 	{	
 		sntStatus = status;
+
+		//warn1("sntStatus=%u, needAck=%u", status, needAck);
 
 		if (needAck == 1 && sntStatus == 1) {
 			needAck = 0;
@@ -269,7 +272,6 @@ implementation
 
 	command error_t AMSend.send[am_id_t id](am_addr_t addr, message_t* msg, uint8_t len)
 	{
-		uint8_t sl_message[255] = {0};
 		uint8_t dataCnt = 0;
 		uint8_t i = 0;
 		uint32_t time;
@@ -318,6 +320,8 @@ implementation
 
 		txData[2] = 0x88;
 
+		//warn1("id = 0x%x", id);
+
 		if (id == 0x3D) {
 			if (call PacketTimeSyncOffset.isSet(msg)) {
 
@@ -335,6 +339,8 @@ implementation
 				msg->data[offset+3] = txTimestamp;
 
 				call PacketTimeStamp.set(msg, call Counter.get() / 16);
+
+				call PacketTimeSyncOffset.clear(msg);
 			}
 		}
 
@@ -342,6 +348,8 @@ implementation
 			txData[i+1] = msg->data[dataCnt];
 			i++;
 		}
+
+		warn1("snd: 0x%x", id);
 
 		dataFifo = RAIL_WriteTxFifo(railHandle, txData, dataLen, true);
 		msgCopy = msg;
