@@ -349,8 +349,6 @@ implementation
 			i++;
 		}
 
-		warn1("snd: 0x%x", id);
-
 		dataFifo = RAIL_WriteTxFifo(railHandle, txData, dataLen, true);
 		msgCopy = msg;
 		signal SendNotifier.aboutToSend[id](addr, msg); //msgCopy
@@ -505,12 +503,12 @@ implementation
 
 	async command uint8_t RadioPacket.maxPayloadLength()
 	{
-		return sizeof(slpacket_header_t) + TOSH_DATA_LENGTH - sizeof(activemessage_header_t);
+		return TOSH_DATA_LENGTH;
 	}
 
 	async command uint8_t RadioPacket.metadataLength(message_t* msg)
 	{
-		return sizeof(message_metadata_t);
+		return sizeof(sl_metadata_t);
 	}
 
 
