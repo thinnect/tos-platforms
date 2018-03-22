@@ -282,11 +282,15 @@ implementation
 		uint16_t dataLen = 0;
 		uint8_t dataFifo = 0;
 		RAIL_TxOptions_t txOption;
-
 		RAIL_CsmaConfig_t csmaConf = {3, 5, 5, -75, 320, 128, 0};
 
 		osThreadId_t thid;
 		osStatus_t status;
+
+		RAIL_SchedulerInfo_t schedulerInfo;
+		schedulerInfo = (RAIL_SchedulerInfo_t){ .priority = 26, //100
+                                          .slipTime = 100000,
+                                          .transactionTime = 200 };
 
 		if( len > call Packet.maxPayloadLength() )
 			return EINVAL;
@@ -353,7 +357,7 @@ implementation
 		msgCopy = msg;
 		signal SendNotifier.aboutToSend[id](addr, msg); //msgCopy
 
-		if (RAIL_StartCcaCsmaTx(railHandle, channel, 0, &csmaConf, NULL)) { //&RAIL_CcaCsma, &csmaConf
+		if (RAIL_StartCcaCsmaTx(railHandle, channel, 0, &csmaConf, &schedulerInfo)) { //&RAIL_CcaCsma, &csmaConf
 			warn1("snt fail");
 			return FAIL;
 		}
@@ -711,7 +715,10 @@ implementation
 
 	tasklet_async command error_t RadioState.turnOn()
 	{
+		RAIL_SchedulerInfo_t schedulerInfo;
 		channel = *(uint32_t *) CHANNEL_ADDR;
+
+		schedulerInfo = (RAIL_SchedulerInfo_t){ .priority = 25 }; //200
 		
 		if (channel == 0xFF) {
 			channel = DEFAULT_RADIO_CHANNEL;
@@ -719,7 +726,7 @@ implementation
 		}
 
 		RAIL_Idle(railHandle, RAIL_IDLE, true);
-		RAIL_StartRx(railHandle, channel, NULL);
+		RAIL_StartRx(railHandle, channel, &schedulerInfo);
 		signal RadioState.done();
 		return SUCCESS;
 	}
