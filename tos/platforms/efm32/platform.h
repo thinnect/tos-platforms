@@ -3,3 +3,5 @@
  * the processor mode neither.
  * (see TEP 107)
  */
+
+#define PLATFORM_MCUSR  0
