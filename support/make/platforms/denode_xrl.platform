@@ -1,0 +1,69 @@
+PFLAGS += -I%T/platforms/denode_xrl
+PFLAGS += -I%T/platforms/denodeb
+PFLAGS += -I%T/platforms/denode
+PFLAGS += -I%T/platforms/denode/chips/at45db
+PFLAGS += -I%T/platforms/denode/chips/atm128rfa1/radio
+
+PFLAGS += -I%T/platforms/iris/chips/at45db
+PFLAGS += -I%T/platforms/mica2/chips/at45db
+PFLAGS += -I%T/platforms/mica/chips/at45db
+PFLAGS += -I%T/chips/at45db
+PFLAGS += -I%T/chips/ds2401
+PFLAGS += -I%T/chips/atm256rfr2
+PFLAGS += -I%T/chips/atm256rfr2/adc
+PFLAGS += -I%T/chips/atm128rfa1
+PFLAGS += -I%T/chips/atm128rfa1/adc
+PFLAGS += -I%T/chips/atm128rfa1/pins
+PFLAGS += -I%T/chips/atm128rfa1/sensors
+PFLAGS += -I%T/chips/atm128rfa1/timer
+PFLAGS += -I%T/chips/atm128rfa1/radio
+PFLAGS += -I%T/chips/atm128rfa1/i2c
+PFLAGS += -I%T/chips/atm128rfa1/spi
+PFLAGS += -I%T/chips/atm1281
+PFLAGS += -I%T/chips/atm1281/adc
+PFLAGS += -I%T/platforms/iris
+PFLAGS += -I%T/platforms/mica
+PFLAGS += -I%T/chips/atm128
+PFLAGS += -I%T/chips/atm128/adc
+PFLAGS += -I%T/chips/atm128/pins
+PFLAGS += -I%T/chips/atm128/spi
+PFLAGS += -I%T/chips/atm128/i2c
+PFLAGS += -I%T/chips/atm128/timer
+PFLAGS += -I%T/lib/timer
+PFLAGS += -I%T/lib/serial
+PFLAGS += -I%T/lib/power
+PFLAGS += -I%T/lib/rfxlink/layers
+PFLAGS += -I%T/lib/rfxlink/util
+PFLAGS += -I%T/lib/diagmsg
+PFLAGS += -I%T/lib/tosboot/micaz
+PFLAGS += -I%T/lib/tosboot/avr
+
+PFLAGS += -fnesc-target=avr
+PFLAGS += -fnesc-no-debug
+
+ifdef RADIO_CHANNEL
+    $(info RADIO_CHANNEL=$(RADIO_CHANNEL))
+    PFLAGS += -DDEFAULT_RADIO_CHANNEL=$(RADIO_CHANNEL)
+    PFLAGS += -DRFA1_DEF_CHANNEL=$(RADIO_CHANNEL)
+endif
+
+ifdef RFPOWER
+    $(info RFPOWER=$(RFPOWER))
+    PFLAGS += -DDEFAULT_RFPOWER=$(RFPOWER)
+    PFLAGS += -DRFA1_DEF_RFPOWER=$(RFPOWER)
+endif
+
+ifdef PLATFORM_BAUDRATE
+    $(info PLATFORM_BAUDRATE=$(PLATFORM_BAUDRATE))
+    PFLAGS += -DPLATFORM_BAUDRATE=$(PLATFORM_BAUDRATE)
+endif
+
+PFLAGS += -mmcu=atmega256rfr2
+
+PFLAGS += -DMCU_ATMEGA256RFR2
+PFLAGS += -DF_CPU=16000000UL
+
+TOSBOOT_START = 0x3e000
+TOSBOOT_UPDATE_START = 0x3fc00
+TOSBOOT_UPDATE_END = 0x3fe00
+TOSBOOT_END = 0x40000
