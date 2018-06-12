@@ -1,0 +1,6 @@
+#ifndef SPI_FLASH_CHIP_H
+#define SPI_FLASH_CHIP_H
+
+#define SPI_FLASH_PHYS_ERASE_SZ 2048
+
+#endif // SPI_FLASH_CHIP_H
