@@ -62,7 +62,7 @@ implementation {
 
 	uint32_t cnt = 0;
 	uint8_t set = 0;
-	uint32_t t0, dt;
+	uint32_t t0 = 0, dt = 0;
 	osTimerId_t oneShot_id;
 
 	void timerEvent(void) {
@@ -107,6 +107,7 @@ implementation {
 	async command void Alarm.stop() {
 		int32_t stat = 0;
 		int32_t stat1 = 0;
+		debug1("tmrStp");
 		atomic {
 			if (osTimerIsRunning(oneShot_id)) {
 				stat = osTimerStopISR(oneShot_id);
