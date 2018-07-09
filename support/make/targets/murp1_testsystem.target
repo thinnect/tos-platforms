@@ -20,7 +20,9 @@ CFLAGS += -DDEVICE_TYPE_IDENTIFICATOR=0xAC
 CFLAGS += -DDEVICE_HARDWARE_VERSION=0x20
 MAIN_IMAGE_END_ADDRESS = 0x3e000
 
-# cbcf667f-dc1e-4d5c-84eb-f39dddbfeb53
+UUID_BOARD    = "3f21975c-20f0-4344-98d5-0c97708559e1"
+
+UUID_PLATFORM = "cbcf667f-dc1e-4d5c-84eb-f39dddbfeb53"
 CFLAGS += -DPLATFORM_UUID_TIME_LOW=0xcbcf667f
 CFLAGS += -DPLATFORM_UUID_TIME_MID=0xdc1e
 CFLAGS += -DPLATFORM_UUID_TIME_HI_AND_VERSION=0x4d5c
@@ -33,7 +35,7 @@ CFLAGS += -DPLATFORM_UUID_NODE_3=0xbf
 CFLAGS += -DPLATFORM_UUID_NODE_4=0xeb
 CFLAGS += -DPLATFORM_UUID_NODE_5=0x53
 
-$(call TOSMake_include_platform,murp)
+$(call TOSMake_include_platform,murp1)
 
 $(call TOSMake_include_make_platform,avr)
 $(call TOSMake_include_make_platform,avrplus)
