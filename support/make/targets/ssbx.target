@@ -1,6 +1,6 @@
 #-*-Makefile-*- vim:syntax=make
 
-TARGET = denode_xrl
+TARGET = ssbx
 
 PROGRAMMER ?= avrdude
 PROGRAMMER_PART ?= -pm256rfr2
@@ -20,10 +20,14 @@ CFLAGS += -DDEVICE_TYPE_IDENTIFICATOR=0x01
 CFLAGS += -DDEVICE_HARDWARE_VERSION=0x09
 MAIN_IMAGE_END_ADDRESS = 0x3e000
 
-$(call TOSMake_include_platform,denode_xrl)
+UUID_BOARD    = "855c52b0-2e11-4a4c-a966-f012c8404553"
+
+UUID_PLATFORM = "30173163-b62c-4775-8ff1-75b781bb96a7"
+
+$(call TOSMake_include_platform,ssbx)
 
 $(call TOSMake_include_make_platform,avr)
 $(call TOSMake_include_make_platform,avrplus)
 
-denode_xrl: $(BUILD_DEPS)
+ssbx: $(BUILD_DEPS)
         @:

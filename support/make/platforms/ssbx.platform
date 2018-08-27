@@ -1,3 +1,4 @@
+PFLAGS += -I%T/platforms/ssbx
 PFLAGS += -I%T/platforms/denode_xrl
 PFLAGS += -I%T/platforms/denodeb
 PFLAGS += -I%T/platforms/denode
