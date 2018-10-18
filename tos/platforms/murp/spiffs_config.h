@@ -1,8 +1,5 @@
 /*
- * spiffs_config.h
- *
- *  Created on: Jul 3, 2013
- *      Author: petera
+ * spiffs_config.h for murp
  */
 
 #ifndef SPIFFS_CONFIG_H_
