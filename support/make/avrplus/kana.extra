@@ -4,7 +4,7 @@ ifeq ($(KANA),)
     $(error KANA must be defined, try "make $(TARGETS) help")
 endif
 
-PROGRAM = kana
+TOSMAKE_PROGRAMMER_TYPE = kana
 
 ifeq ($(PROGRAMMER),avrdude)
     PROGRAMMER_FLAGS = -cstk500v2 -P$(KANA) $(PROGRAMMER_PART) $(PROGRAMMER_EXTRA_FLAGS)
