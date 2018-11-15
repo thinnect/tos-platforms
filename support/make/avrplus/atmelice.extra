@@ -1,7 +1,7 @@
 #-*-Makefile-*- vim:syntax=make
 $(info atmelice.extra)
 
-ifdef AVR_FUSE_H
+ifdef AVR_FUSE_E
     PROGRAMMER_WRITE_FUSES += -U efuse:w:$(AVR_FUSE_E):m
 endif
 ifdef AVR_FUSE_H
