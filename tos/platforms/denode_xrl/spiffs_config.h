@@ -283,7 +283,7 @@ typedef uint8_t u8_t;
 // directly. If all available descriptors become opened, all cache memory is
 // lost.
 #ifndef SPIFFS_TEMPORAL_FD_CACHE
-#define SPIFFS_TEMPORAL_FD_CACHE              1
+#define SPIFFS_TEMPORAL_FD_CACHE              0
 #endif
 
 // Temporal file cache hit score. Each time a file is opened, all cached files
@@ -308,7 +308,7 @@ typedef uint8_t u8_t;
 // file is modified in some way. The index buffer is tied to the file
 // descriptor.
 #ifndef SPIFFS_IX_MAP
-#define SPIFFS_IX_MAP                         1
+#define SPIFFS_IX_MAP                         0
 #endif
 
 // Set SPIFFS_TEST_VISUALISATION to non-zero to enable SPIFFS_vis function
