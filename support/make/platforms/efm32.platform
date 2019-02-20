@@ -20,6 +20,7 @@ PFLAGS += -I%T/chips/cortex/m4/silabs/emlib/inc
 PFLAGS += -I%T/chips/cortex/m4/silabs/EFR32MG12P/Include
 PFLAGS += -I/home/kobi/git/sniffer/
 PFLAGS += -I/home/kobi/git/sniffer/hdlc/
+PFLAGS += -I/home/kobi/random/comm_module/sensors/
 
 PFLAGS += -I%T/lib/timer
 PFLAGS += -I%T/lib/printf

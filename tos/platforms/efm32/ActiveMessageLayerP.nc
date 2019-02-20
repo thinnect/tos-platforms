@@ -98,7 +98,6 @@ implementation
 	#define __LOG_LEVEL__ ( LOG_LEVEL_ActiveMessageP & BASE_LOG_LEVEL )
 	#include "log.h"
 
-	#define CHANNEL_ADDR	(0x0FE00004)
 	#define TOS_ID_ADDR		(0x0FE00000)
 
 	message_t *msgCopy;
@@ -106,7 +105,7 @@ implementation
 	message_t g_msg;
 	message_t *g_msg_copy = &g_msg;
 	uint8_t busy = 0;
-	uint8_t sntStatus = 0;
+	uint8_t sntStatus = SEND_FAIL;
 	uint8_t needAck = 0;
 	uint8_t channel = 14;
 
@@ -115,18 +114,18 @@ implementation
 	task void sntTask() 
 	{
 		if (msgCopy != NULL) {
-			if (sntStatus == 1) {
+			if (sntStatus == SEND_DONE) {
 				warn1("snt");
 				signal SubSend.sendDone(msgCopy, SUCCESS);
-			} else if (sntStatus == 2){
+			} else if (sntStatus == SEND_BUSY){
 				err1("EBUSY SNT DONE");
 				signal SubSend.sendDone(msgCopy, EBUSY);
-			} else if (sntStatus == 0) {
+			} else if (sntStatus == SEND_FAIL) {
 				err1("FAIL SNT DONE");
 				signal SubSend.sendDone(msgCopy, FAIL);
 			}
 			msgCopy = NULL;
-			sntStatus = 0;
+			sntStatus = SEND_FAIL;
 		} else {
 			err1("msgCopy is NULL, sntStatus=%u", sntStatus);
 		}
@@ -136,11 +135,8 @@ implementation
 	{	
 		sntStatus = status;
 
-		//warn1("sntStatus=%u, needAck=%u", status, needAck);
-
-		if (needAck == 1 && sntStatus == 1) {
+		if (needAck == 1 && sntStatus == SEND_DONE) {
 			needAck = 0;
-			pinSet();
 			call Alarm.start(RAIL_GetTime() + 892);
 		} else {
 			post sntTask();
@@ -151,14 +147,12 @@ implementation
 	{
 		call Alarm.stop();
 		err1("rxAckTimeout");
-		sntStatus = 0;
+		sntStatus = SEND_FAIL;
 		call AckReceivedFlag.setValue(msgCopy, false);
 		post sntTask();
 	}
 
 	async event void Alarm.fired() {
-		pinClear();
-		// warn1("alarm fired");
 		call AckReceivedFlag.setValue(msgCopy, true);
 		post sntTask();
 	}
@@ -215,8 +209,6 @@ implementation
 			packetHandle = RAIL_GetRxPacketInfo(rxHandle, RAIL_RX_PACKET_HANDLE_NEWEST,
 			                           &rxPacketInfo);
 			RAIL_GetRxPacketDetails(rxHandle, packetHandle, &appendedInfo);
-
-			pin2set();
 
 			if (rxPacketInfo.firstPortionBytes == rxPacketInfo.packetBytes) {
 				for (i = 0; i < sizeof(message_header_t); i++) {
@@ -411,7 +403,6 @@ implementation
 			msg = signal Snoop.receive[id](msg, payload, len);
 		}
 
-		pin2clear();
 		return msg;
 	}
 
@@ -670,7 +661,7 @@ implementation
 	  /*----------------- CHANNEL -----------------*/
     tasklet_async command uint8_t RadioState.getChannel()
   	{	
-  		channel = *(uint32_t *) CHANNEL_ADDR;
+  		channel = 11; //*(uint32_t *) CHANNEL_ADDR;
   		if (channel == 0xFF) {
 			channel = DEFAULT_RADIO_CHANNEL;
 		}
@@ -716,7 +707,7 @@ implementation
 	tasklet_async command error_t RadioState.turnOn()
 	{
 		RAIL_SchedulerInfo_t schedulerInfo;
-		channel = *(uint32_t *) CHANNEL_ADDR;
+		channel = 11; //*(uint32_t *) CHANNEL_ADDR;
 
 		schedulerInfo = (RAIL_SchedulerInfo_t){ .priority = 25 }; //200
 		

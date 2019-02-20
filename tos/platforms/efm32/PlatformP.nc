@@ -3,6 +3,9 @@
  */
 
 #include "hardware.h" // IRQ
+#include "SignatureArea.h"
+#include "SignatureAreaFile.h"
+#include "DeviceSignature.h"
 
 // uint16_t TOS_NODE_ID;
 
@@ -32,7 +35,9 @@ implementation
 		 * (see TEP 107)
 		 */
 		//call IRQInit.init();
-		TOS_NODE_ID = *(uint32_t *)0x0FE00000;
+		sigInit();
+		TOS_NODE_ID = sigGetNodeId();
+		debug1("%04X", TOS_NODE_ID);
 		if ((TOS_NODE_ID == 0xFFFF) || (TOS_NODE_ID == 0)) {
 			TOS_NODE_ID = 1;
 			warn1("DEFAULT TOS_NODE_ID = 1");
