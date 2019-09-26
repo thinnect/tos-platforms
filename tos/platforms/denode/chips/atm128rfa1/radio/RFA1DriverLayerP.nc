@@ -72,7 +72,8 @@ module RFA1DriverLayerP
     interface LinkPacketMetadata;
 
     interface McuPowerOverride;
-    interface Set<int8_t> as SetTransmitPower;
+    interface Set<uint8_t> as SetTransmitPower;
+    interface Get<uint8_t> as GetTransmitPower;
   }
 
   uses
@@ -899,8 +900,12 @@ implementation
 
   /*----------------- Tx power -----------------*/
 
-  command void SetTransmitPower.set(int8_t power) {
+  command void SetTransmitPower.set(uint8_t power) {
     defaultTxPower = power;
+  }
+
+  command uint8_t GetTransmitPower.get() {
+    return defaultTxPower;
   }
 
   /*----------------- RadioPacket -----------------*/
